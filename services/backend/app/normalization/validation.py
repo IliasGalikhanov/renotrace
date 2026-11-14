@@ -1,12 +1,16 @@
 """Reject corrupt references before any financial history is emitted."""
 
 from collections import defaultdict
+from collections.abc import Mapping
 
 from .models import (
     Agreement,
     AssignContractor,
+    Billing,
+    Cash,
     ConfirmSemantics,
     HistoryInput,
+    PaymentAllocation,
     PaymentRequest,
     ReviewLink,
     SelectAgreement,
@@ -57,6 +61,7 @@ def validate_history(history: HistoryInput) -> None:
             sources[ref].origin == record.origin for ref in record.evidence_refs
         ):
             raise NormalizationError("ORIGIN_SOURCE_MISMATCH", record.id)
+    validate_billing_references(records)
 
     # Validate even proposed replacement graphs; never silently repair cycles.
     edges: dict[str, set[str]] = defaultdict(set)
@@ -108,3 +113,64 @@ def validate_history(history: HistoryInput) -> None:
         elif isinstance(decision, (AssignContractor, ConfirmSemantics)):
             if decision.target_id not in records:
                 raise NormalizationError("UNKNOWN_RECORD", decision.id)
+
+
+def validate_billing_references(records: Mapping[str, object]) -> None:
+    edges: dict[str, set[str]] = defaultdict(set)
+    for item in records.values():
+        if isinstance(item, Billing):
+            if len(item.coverage) != len(set(item.coverage)):
+                raise NormalizationError("DUPLICATE_COVERAGE", item.id)
+            if item.previous_id is not None:
+                previous = records.get(item.previous_id)
+                if (
+                    item.basis != "cumulative_valuation"
+                    or item.starts_at_zero
+                    or not isinstance(previous, Billing)
+                    or previous.basis not in ("incremental_charge", "cumulative_valuation")
+                ):
+                    raise NormalizationError("INVALID_PREVIOUS_BILLING", item.id)
+                edges[item.id].add(previous.id)
+            if item.starts_at_zero and item.basis != "cumulative_valuation":
+                raise NormalizationError("INVALID_ZERO_BASELINE", item.id)
+            if item.credit_target_id is not None:
+                target = records.get(item.credit_target_id)
+                if (
+                    item.basis != "credit_note"
+                    or not isinstance(target, Billing)
+                    or target.basis not in ("incremental_charge", "cumulative_valuation")
+                ):
+                    raise NormalizationError("INVALID_CREDIT_TARGET", item.id)
+            if item.amount_cents is not None and (
+                (item.basis == "credit_note" and item.amount_cents >= 0)
+                or (
+                    item.basis in ("incremental_charge", "cumulative_valuation")
+                    and item.amount_cents < 0
+                )
+            ):
+                raise NormalizationError("INVALID_BILLING_DIRECTION", item.id)
+        elif isinstance(item, PaymentAllocation):
+            charge = records.get(item.charge_id)
+            if (
+                not isinstance(records.get(item.cash_id), Cash)
+                or not isinstance(charge, Billing)
+                or charge.basis not in ("incremental_charge", "cumulative_valuation")
+            ):
+                raise NormalizationError("INVALID_ALLOCATION_REFERENCE", item.id)
+            if item.reverses_allocation_id is not None and not isinstance(
+                records.get(item.reverses_allocation_id), PaymentAllocation
+            ):
+                raise NormalizationError("INVALID_REFUND_REFERENCE", item.id)
+    pending = {key: set(value) for key, value in edges.items()}
+    while pending:
+        leaves = {key for key, children in pending.items() if not (children & pending.keys())}
+        if not leaves:
+            raise NormalizationError("BILLING_CYCLE", ",".join(sorted(pending)))
+        for key in leaves:
+            del pending[key]
+    for item in records.values():
+        if isinstance(item, Billing) and item.previous_id is not None:
+            previous = records[item.previous_id]
+            assert isinstance(previous, Billing)
+            if previous.effective_date > item.effective_date:
+                raise NormalizationError("INVALID_BILLING_ORDER", item.id)

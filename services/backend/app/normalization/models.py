@@ -11,7 +11,17 @@ Revision = Annotated[int, Field(strict=True, ge=1)]
 CaseRevision = Annotated[int, Field(strict=True, ge=0)]
 References = Annotated[tuple[Identifier, ...], Field(min_length=1)]
 Metric = Literal[
-    "commitment_total_cents", "net_paid_cents", "remaining_commitment_cents", "requested_now_cents"
+    "commitment_total_cents",
+    "net_paid_cents",
+    "remaining_commitment_cents",
+    "requested_now_cents",
+    "billed_total_cents",
+    "charge_balances",
+    "positive_outstanding_cents",
+    "credit_balance_cents",
+    "net_allocations_cents",
+    "unallocated_cents",
+    "cash_balances",
 ]
 
 
@@ -91,8 +101,56 @@ class PaymentRequest(Record):
     mentioned_deposit_cents: Cents | None = None  # descriptive only; never a cash event
 
 
+class RelatedRecord(Record):
+    basis_revision: CaseRevision
+    relationship_review: Literal["proposed", "accepted", "rejected", "invalidated"] = "proposed"
+    relationship_actor_id: Identifier | None = None
+    relationship_reviewed_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def relationship_audit(self) -> Self:
+        utc(self.relationship_reviewed_at)
+        if self.relationship_review in ("accepted", "rejected") and (
+            self.relationship_actor_id is None or self.relationship_reviewed_at is None
+        ):
+            raise ValueError("Relationship review requires actor and timestamp")
+        return self
+
+
+class Billing(RelatedRecord):
+    kind: Literal["billing"] = "billing"
+    basis: Literal[
+        "incremental_charge", "cumulative_valuation", "balance_statement", "credit_note", "unknown"
+    ]
+    # Explicitly confirmed atomic work/period IDs; equal IDs mean overlapping coverage.
+    coverage: tuple[Identifier, ...] = ()
+    coverage_confirmed: bool = False
+    previous_id: Identifier | None = None
+    starts_at_zero: bool = False
+    credit_target_id: Identifier | None = None
+
+
+class PaymentAllocation(RelatedRecord):
+    kind: Literal["allocation"] = "allocation"
+    cash_id: Identifier
+    charge_id: Identifier
+    reverses_allocation_id: Identifier | None = None
+
+    @model_validator(mode="after")
+    def allocation_direction(self) -> Self:
+        if self.amount_cents == 0:
+            raise ValueError("Allocation direction must be nonzero")
+        if self.amount_cents is not None:
+            if self.amount_cents > 0 and self.reverses_allocation_id is not None:
+                raise ValueError("Only refunds can reverse allocations")
+            if self.amount_cents < 0 and self.reverses_allocation_id is None:
+                raise ValueError("Refund allocation direction must reverse an original allocation")
+        return self
+
+
 FinancialRecord = Annotated[
-    Agreement | Adjustment | Cash | PaymentRequest, Field(discriminator="kind")
+    Agreement | Adjustment | Cash | PaymentRequest | Billing | PaymentAllocation,
+    Field(discriminator="kind"),
 ]
 
 

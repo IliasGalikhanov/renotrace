@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from app.ledger import AmountRecord, CashEvent, LedgerInput
 
+from .billing import ALLOCATION_METRICS, BILLING_METRICS, billing
 from .models import (
     Adjustment,
     Agreement,
@@ -25,9 +26,13 @@ from .models import (
 )
 from .validation import validate_history
 
-NORMALIZATION_VERSION = "normalization-0.1.1"
+NORMALIZATION_VERSION = "normalization-0.2.0"
 TERMS: tuple[Metric, ...] = ("commitment_total_cents", "remaining_commitment_cents")
-CASH: tuple[Metric, ...] = ("net_paid_cents", "remaining_commitment_cents")
+CASH: tuple[Metric, ...] = (
+    "net_paid_cents",
+    "remaining_commitment_cents",
+    *ALLOCATION_METRICS,
+)
 REQUEST: tuple[Metric, ...] = ("requested_now_cents",)
 
 
@@ -63,7 +68,15 @@ class _Context:
         for record_id in ids:
             row = self.records[record_id]
             metrics.update(
-                CASH if row.kind == "cash" else REQUEST if row.kind == "payment_request" else TERMS
+                CASH
+                if row.kind == "cash"
+                else REQUEST
+                if row.kind == "payment_request"
+                else BILLING_METRICS
+                if row.kind == "billing"
+                else ALLOCATION_METRICS
+                if row.kind == "allocation"
+                else TERMS
             )
         decision_ids = tuple(sorted(decision_ids))
         digest = hashlib.sha256(json.dumps([code, ids, decision_ids]).encode()).hexdigest()[:20]
@@ -524,6 +537,7 @@ class _Context:
         candidates = self.candidates()
         agreement, adjustments = self.agreements(candidates)
         cash_events = self.cash(candidates)
+        charges, billing_credits, allocations = billing(self, candidates, cash_events)
         requested = None
         for row in candidates:
             if row.kind != "payment_request":
@@ -547,6 +561,9 @@ class _Context:
             adjustments=adjustments,
             cash_events=cash_events,
             requested_now_cents=requested,
+            charges=charges,
+            billing_credits=billing_credits,
+            allocations=allocations,
         )
         questions = tuple(sorted(self.questions.values(), key=lambda q: (q.code, q.record_ids)))
         applied = set().union(*self.used.values())

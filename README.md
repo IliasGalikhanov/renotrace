@@ -4,11 +4,11 @@
 
 RenoTrace traces a renovation invoice back to recorded terms, changes, and payments. The requested amount, calculated remainder, payment conditions, and unresolved questions are separate concepts.
 
-## Current status: stage 2
+## Current status: stage 3
 
-Implemented: a runnable Next.js/TypeScript shell, a FastAPI health endpoint, a pure Python ledger, and a pure structured-history normalization module. Normalization selects confirmed estimate versions, removes included changes, filters payments/refunds, reconciles bank identities, applies explicit user decisions, and returns unresolved questions and provenance. Both domain modules run without a browser, AI, database, or network.
+Implemented: a runnable Next.js/TypeScript shell, a FastAPI health endpoint, a pure Python ledger, and a pure structured-history normalization module. Normalization selects confirmed estimate versions, removes included changes, filters payments/refunds, reconciles bank identities, applies explicit user decisions, and returns unresolved questions and provenance. Stage 3 adds typed billing, comparable cumulative valuations, targeted credit notes, explicit partial payment/refund allocations, invoice balances and unallocated cash. Both domain modules run without a browser, AI, database, or network.
 
-Not implemented: raw document extraction/OCR, inferred document matching, cumulative billing, invoice allocations, authentication, persistence, worker queue, reports, checkout, or deployment. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The web page is only a placeholder. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
+Not implemented: raw document extraction/OCR, inferred document matching, authentication, persistence, worker queue, reports, checkout, or deployment. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The web page is only a placeholder. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
 
 ## Install on Windows
 
@@ -19,7 +19,7 @@ Set-Location 'D:\Новая папка\3 курс\Business Cup\renotrace'
 .\scripts\setup.ps1
 ```
 
-The script installs uv **0.13.8** into `.tools`, CPython **3.13.18** into `.runtime`, Python dependencies into `.venv`, and Node packages into `node_modules`. It uses `uv.lock` and `package-lock.json`, leaves the system Python unchanged, and requires internet access on the first installation. `.env.example` contains no secrets; stage 1 does not require an `.env` file or external accounts.
+The script installs uv **0.13.8** into `.tools`, CPython **3.13.18** into `.runtime`, Python dependencies into `.venv`, and Node packages into `node_modules`. It uses `uv.lock` and `package-lock.json`, leaves the system Python unchanged, and requires internet access on the first installation. `.env.example` contains no secrets; the domain modules do not require an `.env` file or external accounts.
 
 On macOS/Linux with Node 24.11.0 and uv 0.13.8 available:
 
@@ -41,6 +41,17 @@ For the following commands on macOS/Linux, replace `.\scripts\uv.ps1` with `uv`.
 These commands use [13 new structured scenarios](fixtures/normalization_cases.json), not the stage 1 normalized numeric arrays. Output contains `normalization` (LedgerInput, included/excluded records and reasons, questions, incomplete metrics, source registry, links and applied decisions) and `calculation` from the real ledger.
 
 FIN-01 yields $12,700 in commitments, $8,000 paid, $4,700 remaining, and a separate $5,500 request. FIN-03 confirms the $13,500 replacement includes the $1,500 change, so commitments remain $13,500. An unconfirmed conflicting estimate leaves the baseline and remainder `null` and returns a question.
+
+Stage 3 has [9 additional structured billing scenarios](fixtures/billing_cases.json):
+
+```powershell
+.\scripts\uv.ps1 run --locked renotrace-normalize --fixtures fixtures/billing_cases.json --case FIN-11
+.\scripts\uv.ps1 run --locked renotrace-normalize --fixtures fixtures/billing_cases.json --case PARTIAL
+.\scripts\uv.ps1 run --locked renotrace-normalize --fixtures fixtures/billing_cases.json --case FIN-13
+.\scripts\uv.ps1 run --locked renotrace-normalize --fixtures fixtures/billing_cases.json --case REFUND
+```
+
+FIN-11 yields an $8,500 increment, $13,500 billed and $10,500 of positive invoice balances. PARTIAL leaves $500 unallocated. FIN-13 retains a $2,000 unallocated advance and an $8,000 contract remainder. REFUND reverses an explicit allocation and clears a $1,000 invoice credit. The ledger reports `billed_total_cents`, `charge_balances`, separate positive/credit totals, `net_allocations_cents`, `unallocated_cents` and per-event `cash_balances`. Changing allocations never changes C/P/R or the request.
 
 For your own structured JSON using [HistoryInput](services/backend/app/normalization/models.py):
 
@@ -115,11 +126,11 @@ npm run typecheck
 
 The smoke check starts actual FastAPI and built Next.js servers on temporary loopback ports, checks HTTP 200 and expected response content, then stops both. Tests require local loopback sockets; a network sandbox that blocks Python's local socket pair can stall ASGI startup. Run these checks in a normal terminal. Pytest creates `.pytest_tmp` directly under the repository root, so a fresh checkout needs no pre-existing cache directory.
 
-The stage 1 FIN-01…FIN-16 tests exercise the calculator with supplied normalized records. Stage 2 adds 130 tests of structured inputs, version/link decisions, estimate replacement and included changes, cash identity conflicts, review/origin separation, cutoff dates, invalid references, cycles, stale/conflicting decisions, CLI behavior and order independence. Hypothesis permutes records, sources, links and decisions; repeated normalization does not create financial events. Stage 2.1 adds 8 regression/property tests and enforces that every UNRESOLVED_TRANSACTION exclusion has a paid/remainder question and provisional flags. The combined suite has 229 tests. Domain coverage includes branches and a 95% minimum gate.
+The stage 1 FIN-01…FIN-16 tests exercise the calculator with supplied normalized records. Stage 2 adds 130 tests of structured inputs, version/link decisions, estimate replacement and included changes, cash identity conflicts, review/origin separation, cutoff dates, invalid references, cycles, stale/conflicting decisions, CLI behavior and order independence. Hypothesis permutes records, sources, links and decisions; repeated normalization does not create financial events. Stage 2.1 adds 8 regression/property tests and enforces that every UNRESOLVED_TRANSACTION exclusion has a paid/remainder question and provisional flags. Stage 3 adds 93 tests covering billing coverage, cumulative predecessors, credit notes, partial allocations, canonical cash capacity, refund limits, versions, dates, evidence, CLI, order/repeat invariance and per-payment conservation. The combined suite has 322 tests (99.84% domain statement/branch coverage in the stage 3 run). Domain coverage includes branches and a 95% minimum gate.
 
-**Limits of these tests:** the old ledger fixtures still do not establish normalization. The new structured fixtures independently test the rules implemented in stage 2, using explicit source metadata, links and decisions. They do not establish OCR accuracy, automatic interpretation of invoices, fuzzy duplicate detection, or the truth of a user's assertion. Cumulative billing, allocations, payment conditions and the complete set of issues from the original design remain outside this stage. Synthetic source references identify registry entries, not real source files.
+**Limits of these tests:** the old ledger fixtures still do not establish normalization. The new structured fixtures independently test the rules implemented in stages 2 and 3, using explicit source metadata, links and decisions. They do not establish OCR accuracy, automatic interpretation of invoices, fuzzy duplicate detection, or the truth of a user's assertion. Coverage is explicitly supplied as confirmed atomic work/period IDs; automatic overlap recognition and payment conditions remain outside this stage. Cumulative valuations are gross of separately recorded credit notes; documents with credits already embedded must be resolved before creating this input. Synthetic source references identify registry entries, not real source files.
 
-GitHub Actions runs installation, tests, lint/type checks, a production build, and HTTP smoke checks on Windows and Linux. See [the workflow](.github/workflows/checks.yml), [stage 2.1 correction report](planning/STAGE_2_1_REPORT.md), [stage 2 report](planning/STAGE_2_REPORT.md), and the historical [stage 1 report](planning/STAGE_1_REPORT.md) for verification scope.
+GitHub Actions runs installation, tests, lint/type checks, a production build, and HTTP smoke checks on Windows and Linux. See [the workflow](.github/workflows/checks.yml), [stage 3 report](planning/STAGE_3_REPORT.md), [stage 2.1 correction report](planning/STAGE_2_1_REPORT.md), [stage 2 report](planning/STAGE_2_REPORT.md), and the historical [stage 1 report](planning/STAGE_1_REPORT.md) for verification scope.
 
 ## Structure and documentation
 

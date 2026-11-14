@@ -776,7 +776,16 @@ def test_rejected_bank_confirmation_makes_entire_group_provisional(explicit_acce
     question = next(q for q in normalized.questions if q.code == "TRANSACTION_REVIEW_CONFLICT")
     assert question.record_ids == ("import-a", "import-b")
     assert set(question.decision_ids) == {d["id"] for d in data["decisions"]}
-    assert set(question.affects) == {"net_paid_cents", "remaining_commitment_cents"}
+    assert set(question.affects) == {
+        "net_paid_cents",
+        "remaining_commitment_cents",
+        "charge_balances",
+        "positive_outstanding_cents",
+        "credit_balance_cents",
+        "net_allocations_cents",
+        "unallocated_cents",
+        "cash_balances",
+    }
     assert {entry.record.id: entry.reason for entry in normalized.excluded} == {
         "import-a": "UNRESOLVED_TRANSACTION",
         "import-b": "REJECTED_BY_USER",

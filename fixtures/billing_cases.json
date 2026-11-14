@@ -1,0 +1,1282 @@
+{
+  "version": "0.2",
+  "synthetic": true,
+  "cases": [
+    {
+      "id": "FIN-11",
+      "title": "Prior billed 5000, paid 3000, cumulative 13500",
+      "input": {
+        "case_id": "FIN-11",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-11",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:first",
+            "case_id": "FIN-11",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:first"
+          },
+          {
+            "id": "source:current",
+            "case_id": "FIN-11",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:current"
+          },
+          {
+            "id": "source:payment",
+            "case_id": "FIN-11",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic:payment"
+          },
+          {
+            "id": "source:allocation",
+            "case_id": "FIN-11",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:allocation"
+          },
+          {
+            "id": "source:request",
+            "case_id": "FIN-11",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:request"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1350000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "first",
+            "record_id": "first",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 500000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:first"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "whole-contract"
+            ],
+            "coverage_confirmed": true
+          },
+          {
+            "id": "current",
+            "record_id": "current",
+            "version": 1,
+            "effective_date": "2026-11-10",
+            "amount_cents": 1350000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:current"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "cumulative_valuation",
+            "coverage": [
+              "whole-contract"
+            ],
+            "coverage_confirmed": true,
+            "previous_id": "first"
+          },
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "origin": "bank_record",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "cash",
+            "state": "completed",
+            "bank_account_id": "bank:account",
+            "bank_transaction_id": "payment"
+          },
+          {
+            "id": "allocation",
+            "record_id": "allocation",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:allocation"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "allocation",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "cash_id": "payment",
+            "charge_id": "first"
+          },
+          {
+            "id": "request",
+            "record_id": "request",
+            "version": 1,
+            "effective_date": "2026-11-10",
+            "amount_cents": 1050000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:request"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "payment_request"
+          }
+        ],
+        "links": [],
+        "decisions": [],
+        "current_request_id": "request"
+      },
+      "expected": {
+        "billed_total_cents": 1350000,
+        "positive_outstanding_cents": 1050000,
+        "credit_balance_cents": 0,
+        "unallocated_cents": 0,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 1050000,
+        "requested_now_cents": 1050000
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "PARTIAL",
+      "title": "One payment split across two charges",
+      "input": {
+        "case_id": "PARTIAL",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "PARTIAL",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:first",
+            "case_id": "PARTIAL",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:first"
+          },
+          {
+            "id": "source:second",
+            "case_id": "PARTIAL",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:second"
+          },
+          {
+            "id": "source:payment",
+            "case_id": "PARTIAL",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic:payment"
+          },
+          {
+            "id": "source:a1",
+            "case_id": "PARTIAL",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:a1"
+          },
+          {
+            "id": "source:a2",
+            "case_id": "PARTIAL",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:a2"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "first",
+            "record_id": "first",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:first"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "first"
+            ],
+            "coverage_confirmed": true
+          },
+          {
+            "id": "second",
+            "record_id": "second",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 150000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:second"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "second"
+            ],
+            "coverage_confirmed": true
+          },
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "origin": "bank_record",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "cash",
+            "state": "completed",
+            "bank_account_id": "bank:account",
+            "bank_transaction_id": "payment"
+          },
+          {
+            "id": "a1",
+            "record_id": "a1",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:a1"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "allocation",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "cash_id": "payment",
+            "charge_id": "first"
+          },
+          {
+            "id": "a2",
+            "record_id": "a2",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 150000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:a2"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "allocation",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "cash_id": "payment",
+            "charge_id": "second"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "billed_total_cents": 250000,
+        "unallocated_cents": 50000,
+        "positive_outstanding_cents": 0,
+        "net_allocations_cents": 250000
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-13",
+      "title": "Advance without billing allocations",
+      "input": {
+        "case_id": "FIN-13",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-13",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:advance",
+            "case_id": "FIN-13",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic:advance"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "advance",
+            "record_id": "advance",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 200000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:advance"
+            ],
+            "origin": "bank_record",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "cash",
+            "state": "completed",
+            "bank_account_id": "bank:account",
+            "bank_transaction_id": "advance"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "net_paid_cents": 200000,
+        "remaining_commitment_cents": 800000,
+        "unallocated_cents": 200000,
+        "billed_total_cents": 0
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "OVERPAID",
+      "title": "Overpaid invoice retains negative balance",
+      "input": {
+        "case_id": "OVERPAID",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "OVERPAID",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:invoice",
+            "case_id": "OVERPAID",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:invoice"
+          },
+          {
+            "id": "source:payment",
+            "case_id": "OVERPAID",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic:payment"
+          },
+          {
+            "id": "source:a1",
+            "case_id": "OVERPAID",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:a1"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "invoice",
+            "record_id": "invoice",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:invoice"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "invoice"
+            ],
+            "coverage_confirmed": true
+          },
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "origin": "bank_record",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "cash",
+            "state": "completed",
+            "bank_account_id": "bank:account",
+            "bank_transaction_id": "payment"
+          },
+          {
+            "id": "a1",
+            "record_id": "a1",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:a1"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "allocation",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "cash_id": "payment",
+            "charge_id": "invoice"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "credit_balance_cents": 100000,
+        "positive_outstanding_cents": 0,
+        "unallocated_cents": 0
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "REFUND",
+      "title": "Refund corrects the explicit original allocation",
+      "input": {
+        "case_id": "REFUND",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "REFUND",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:invoice",
+            "case_id": "REFUND",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:invoice"
+          },
+          {
+            "id": "source:payment",
+            "case_id": "REFUND",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic:payment"
+          },
+          {
+            "id": "source:a1",
+            "case_id": "REFUND",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:a1"
+          },
+          {
+            "id": "source:refund",
+            "case_id": "REFUND",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic:refund"
+          },
+          {
+            "id": "source:r1",
+            "case_id": "REFUND",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:r1"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "invoice",
+            "record_id": "invoice",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:invoice"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "invoice"
+            ],
+            "coverage_confirmed": true
+          },
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "origin": "bank_record",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "cash",
+            "state": "completed",
+            "bank_account_id": "bank:account",
+            "bank_transaction_id": "payment"
+          },
+          {
+            "id": "a1",
+            "record_id": "a1",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:a1"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "allocation",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "cash_id": "payment",
+            "charge_id": "invoice"
+          },
+          {
+            "id": "refund",
+            "record_id": "refund",
+            "version": 1,
+            "effective_date": "2026-11-10",
+            "amount_cents": -100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:refund"
+            ],
+            "origin": "bank_record",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "cash",
+            "state": "completed",
+            "bank_account_id": "bank:account",
+            "bank_transaction_id": "refund"
+          },
+          {
+            "id": "r1",
+            "record_id": "r1",
+            "version": 1,
+            "effective_date": "2026-11-10",
+            "amount_cents": -100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:r1"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "allocation",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "cash_id": "refund",
+            "charge_id": "invoice",
+            "reverses_allocation_id": "a1"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "credit_balance_cents": 0,
+        "positive_outstanding_cents": 0,
+        "net_paid_cents": 1000000,
+        "remaining_commitment_cents": 0,
+        "unallocated_cents": 0
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "BALANCE",
+      "title": "Balance statement after advance creates no charge",
+      "input": {
+        "case_id": "BALANCE",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "BALANCE",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:advance",
+            "case_id": "BALANCE",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic:advance"
+          },
+          {
+            "id": "source:balance",
+            "case_id": "BALANCE",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:balance"
+          },
+          {
+            "id": "source:request",
+            "case_id": "BALANCE",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:request"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "advance",
+            "record_id": "advance",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 200000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:advance"
+            ],
+            "origin": "bank_record",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "cash",
+            "state": "completed",
+            "bank_account_id": "bank:account",
+            "bank_transaction_id": "advance"
+          },
+          {
+            "id": "balance",
+            "record_id": "balance",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 800000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:balance"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "balance_statement",
+            "coverage": [],
+            "coverage_confirmed": false
+          },
+          {
+            "id": "request",
+            "record_id": "request",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 800000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:request"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "payment_request",
+            "mentioned_deposit_cents": 200000
+          }
+        ],
+        "links": [],
+        "decisions": [],
+        "current_request_id": "request"
+      },
+      "expected": {
+        "billed_total_cents": 0,
+        "net_paid_cents": 200000,
+        "remaining_commitment_cents": 800000,
+        "requested_now_cents": 800000,
+        "unallocated_cents": 200000
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "OVERLAP",
+      "title": "Unresolved overlapping work",
+      "input": {
+        "case_id": "OVERLAP",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "OVERLAP",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:first",
+            "case_id": "OVERLAP",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:first"
+          },
+          {
+            "id": "source:second",
+            "case_id": "OVERLAP",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:second"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "first",
+            "record_id": "first",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 500000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:first"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "room"
+            ],
+            "coverage_confirmed": true
+          },
+          {
+            "id": "second",
+            "record_id": "second",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 600000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:second"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "room"
+            ],
+            "coverage_confirmed": true
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "billed_total_cents": 0
+      },
+      "expected_question_codes": [
+        "BILLING_COVERAGE_OVERLAP"
+      ]
+    },
+    {
+      "id": "CREDIT",
+      "title": "Billing credit has no cash or contract effect",
+      "input": {
+        "case_id": "CREDIT",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "CREDIT",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:invoice",
+            "case_id": "CREDIT",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:invoice"
+          },
+          {
+            "id": "source:credit",
+            "case_id": "CREDIT",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:credit"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "invoice",
+            "record_id": "invoice",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:invoice"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "incremental_charge",
+            "coverage": [
+              "invoice"
+            ],
+            "coverage_confirmed": true
+          },
+          {
+            "id": "credit",
+            "record_id": "credit",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": -100000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:credit"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "credit_note",
+            "coverage": [],
+            "coverage_confirmed": true,
+            "credit_target_id": "invoice"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "billed_total_cents": 900000,
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 0,
+        "remaining_commitment_cents": 1000000
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "UNKNOWN-PREVIOUS",
+      "title": "Unknown previous billing is not zero",
+      "input": {
+        "case_id": "UNKNOWN-PREVIOUS",
+        "case_revision": 1,
+        "contractor_id": "builder",
+        "cutoff_date": "2026-11-14",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "UNKNOWN-PREVIOUS",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:base"
+          },
+          {
+            "id": "source:current",
+            "case_id": "UNKNOWN-PREVIOUS",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic:current"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "agreement"
+          },
+          {
+            "id": "current",
+            "record_id": "current",
+            "version": 1,
+            "effective_date": "2026-11-01",
+            "amount_cents": 1350000,
+            "contractor_id": "builder",
+            "evidence_refs": [
+              "source:current"
+            ],
+            "origin": "document",
+            "review": {
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "owner",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z"
+            },
+            "kind": "billing",
+            "basis_revision": 1,
+            "relationship_review": "accepted",
+            "relationship_actor_id": "owner",
+            "relationship_reviewed_at": "2026-11-14T10:00:00Z",
+            "basis": "cumulative_valuation",
+            "coverage": [
+              "whole"
+            ],
+            "coverage_confirmed": true
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "billed_total_cents": 0
+      },
+      "expected_question_codes": [
+        "PREVIOUS_BILLING_REQUIRED"
+      ]
+    }
+  ]
+}

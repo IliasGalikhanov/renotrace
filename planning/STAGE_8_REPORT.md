@@ -25,7 +25,7 @@ Financial edits are saved by **Save review and calculate** or **Run recheck**; u
 - A concurrent integration test exposed mixed MVCC reads after waiting for a project row lock. Fixed by loading invoice side data after acquiring the project lock; identical concurrent retries then return consistent state and one result.
 - Final production frontend build, strict mypy/TypeScript checks, Ruff, Prettier and specification integrity checks passed. HTTP smoke passed through the real BFF, normalization and ledger. Final targeted Python checks: **45 passed**; final stage 8 integration rerun: **6 passed**.
 - Full guest browser suite: **12 passed** at 360/768/1440 px, including an intentionally lost successful response and retry. After final presentation/provenance changes, the three recheck journeys passed again. Existing demo browser suite: **34 passed, 2 intentionally skipped** (viewport-specific checks).
-- Visually inspected the final comparison at all three widths: readable amounts, wrapping controls and no horizontal overflow. Local screenshots: [360 px](screenshots/stage8/comparison-guest-360.png), [768 px](screenshots/stage8/comparison-guest-768.png), [1440 px](screenshots/stage8/comparison-guest-1440.png). These capture local validation, not yet a public release.
+- Visually inspected the final comparison at all three widths: readable amounts, wrapping controls and no horizontal overflow. Public-release screenshots: [360 px](screenshots/stage8/comparison-guest-360.png), [768 px](screenshots/stage8/comparison-guest-768.png), [1440 px](screenshots/stage8/comparison-guest-1440.png). The committed images now come from the final public run described below; all three were visually inspected again.
 
 ## Run and manually verify
 
@@ -65,4 +65,24 @@ npm run test:remote
 
 ## Release gate
 
-CI, migration and public deployment pending. Previous runtime SHA is `6cb667c5308a9cee98b722f7b3956dcd8ffd58dc`; stage 7 final documentation/CI SHA is `28227f80cd8cd523a23d17c8ad1a67597c16b57f`. Do not claim the new public workflow before publishing and testing its checked SHA. Migration/rollback instructions are in [DEPLOYMENT.md](DEPLOYMENT.md).
+Published application SHA: `3dba4d1b0d47ad3a315a02b96ca636fa1fb165b7`. Frontend: <https://renotrace.vercel.app/review>; backend: <https://renotrace-api.onrender.com>. [Release CI 43645110425](https://github.com/IliasGalikhanov/renotrace/actions/runs/43645110425) passed on Linux and Windows: 401 Python tests, 34 demo browser tests with 2 intentional skips, 23 real integration tests and 12 guest browser tests. Later report/screenshot commits do not change the deployed application.
+
+The explicit additive production migration completed successfully on 2026-11-15 **before** deploying the backend. The previous backend remained healthy with OpenAPI `0.7.0` after migration. Render was then deployed and checked independently: `/healthz` returned `ok`, OpenAPI `0.8.0` exposed all four recheck/comparison routes. Only after the public backend test passed was Vercel switched to the same SHA. Existing Vercel Hobby, Render Free and Supabase Free resources were reused; no paid additions, new services or secrets were introduced.
+
+The owner confirmed Render Live and Vercel Ready for the exact SHA supplied above. Dashboard status is user-confirmed: the built-in browser controller returned `Trusted RPC service is not configured: browser` and its advertised skill file was unavailable, so final deployment IDs could not be independently captured. Public HTTPS behavior was tested independently, without local servers. Local test containers were stopped, retaining their volumes.
+
+Public backend acceptance: **1 passed, 5 deselected in 285.20 seconds**. Real uploaded synthetic PDFs exercise $6,200 -> $5,000, unchanged P/R, concurrent retries, pinned reply versions, immutable history, source-change invalidation, isolation and deletion. Direct database-trigger/table checks and restart/expiry simulation run only against disposable local/CI services; they were not performed on production.
+
+Public browser acceptance: **3 passed in 12.6 minutes**, one complete journey at each of **360/768/1440 px** (4.3 / 4.2 / 4.0 minutes). The tests use real PDF uploads, reviewed financial facts and invoice composition, a saved reply, a persisted draft restored after reload, explicit invoice replacement and row matching, payment evidence links, a saved package, and a separately triggered recheck. A deliberately lost successful response is retried without producing a second comparison. Reloaded history shows requested **$6,200 -> $5,000**, C **$6,200 -> $6,200**, P **$1,200 -> $1,200**, R **$5,000 -> $5,000**, with unresolved evidence still marked preliminary. Every test deletes its own review.
+
+After the new journey, the public demo regression passed: **12 tests in 41.9 seconds**, covering FIN-01/11/16, source disclosure, reset, separate visitors and all three widths. Final public comparison screenshots are linked above; visual inspection confirmed readable amounts and controls, visible uncertainty and no horizontal overflow. These timings establish functional acceptance, not a low-latency claim: several uploads and database saves take minutes on the existing free resources. The backend can sleep; existing startup waiting/retry behavior remains, without artificial keepalive.
+
+To reproduce the direct HTTPS backend check (no production credentials or local database access):
+
+```powershell
+$env:GUEST_API_URL='https://renotrace-api.onrender.com'
+Remove-Item Env:GUEST_LOCAL_DB -ErrorAction SilentlyContinue
+.\scripts\uv.ps1 run --locked pytest tests/integration/test_guest_recheck.py -k real_recheck -q --tb=short
+```
+
+The public browser commands are listed above. Previous runtime SHA: `6cb667c5308a9cee98b722f7b3956dcd8ffd58dc`; stage 7 final documentation/CI SHA: `28227f80cd8cd523a23d17c8ad1a67597c16b57f`. Preserve additive tables and history on rollback; follow [DEPLOYMENT.md](DEPLOYMENT.md#stage-8-migration-and-release). Stage 8 is complete; downloadable reconciliation packages remain a separate stage.

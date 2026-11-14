@@ -4,6 +4,8 @@ See [stage 8 report](STAGE_8_REPORT.md) for the latest release gate. Stage 5 bel
 
 ## Stage 8 migration and release
 
+Published application SHA: `3dba4d1b0d47ad3a315a02b96ca636fa1fb165b7`. Frontend: <https://renotrace.vercel.app/review>; backend: <https://renotrace-api.onrender.com>. The owner confirmed Render Live and Vercel Ready on 2026-11-15. The additive migration was applied before switching the backend; OpenAPI reports `0.8.0`. See [release evidence and verification boundaries](STAGE_8_REPORT.md#release-gate) for independent public checks. Later report/screenshot commits do not change the deployed runtime.
+
 No new service or secret is needed. Existing Vercel Hobby, Render Free and Supabase Free resources are reused, without paid additions. After CI passes for the release SHA, use its checked checkout to apply the additive migration **before** deploying the new backend:
 
 ```powershell

@@ -67,6 +67,7 @@ class LinkChoice(Model):
 
 
 class ReviewCommand(Model):
+    mutation_id: Annotated[str, Field(pattern=r"^[a-f0-9-]{36}$")] | None = None
     expected_revision: Annotated[int, Field(strict=True, ge=0)]
     records: Annotated[list[RecordChoice], Field(max_length=150)]
     agreement_id: ShortText | None = None

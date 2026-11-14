@@ -10,6 +10,7 @@ from typing import Any
 from uuid import uuid4
 
 from .calculation import ProjectResponse, result_for, validate_command
+from .casework_store import Casework, freeze, remember, replay, response
 from .database import Database, digest
 from .extraction import semantic_candidates
 from .models import Document, Page, Problem, ReviewCommand, SavedReview, Ticket, TicketRequest
@@ -39,10 +40,12 @@ class Reviews:
     def __init__(self, database: Database, objects: Objects) -> None:
         self.db = database
         self.objects = objects
+        self.casework = Casework(database)
 
     def project(self, project_id: str, token: str) -> ProjectResponse:
-        project = self.db.read(project_id, token)
-        return ProjectResponse(project=project, result=result_for(project))
+        with self.db.connection() as connection:
+            project = self.db.load(connection, project_id, token, lock=True)
+            return response(connection, project)
 
     def ticket(self, project_id: str, token: str, command: TicketRequest) -> Ticket:
         with self.db.connection() as connection:
@@ -145,6 +148,8 @@ class Reviews:
     def review(self, project_id: str, token: str, command: ReviewCommand) -> ProjectResponse:
         with self.db.connection() as connection:
             project = self.db.load(connection, project_id, token, lock=True)
+            if replay(connection, project_id, command.mutation_id, "review", command):
+                return response(connection, project)
             if any(d.status in ("queued", "processing") for d in project.documents):
                 raise Problem(409, "Wait for document processing before saving your review")
             validate_command(project, command)
@@ -167,7 +172,10 @@ class Reviews:
                 "INSERT INTO guest_review.audit(id,project_id,data) VALUES (%s,%s,%s::jsonb)",
                 (saved.id, project.id, saved.model_dump_json()),
             )
-            return ProjectResponse(project=project, result=result)
+            data = response(connection, project, result)
+            freeze(connection, data)
+            remember(connection, project_id, command.mutation_id, "review", command, saved.id)
+            return data
 
     def delete(self, project_id: str, token: str) -> None:
         with self.db.connection() as connection:

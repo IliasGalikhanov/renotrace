@@ -22,8 +22,20 @@ async function proxy(
     (project &&
       ((path.length === 2 && ["GET", "DELETE"].includes(request.method)) ||
         (path.length === 3 &&
-          ["review", "tickets"].includes(path[2]) &&
-          request.method === "POST")));
+          ["review", "tickets", "replies", "attachments"].includes(path[2]) &&
+          request.method === "POST") ||
+        (path[2] === "snapshots" &&
+          request.method === "GET" &&
+          (path.length === 3 ||
+            (path.length === 4 && /^[a-f0-9-]{36}$/.test(path[3])))) ||
+        (path.length === 5 &&
+          request.method === "POST" &&
+          ((path[2] === "questions" &&
+            /^q-[a-f0-9]{32}$/.test(path[3]) &&
+            path[4] === "state") ||
+            (path[2] === "replies" &&
+              /^[a-f0-9-]{36}$/.test(path[3]) &&
+              path[4] === "edit")))));
   if (!valid)
     return NextResponse.json(
       { detail: "Unknown review route" },

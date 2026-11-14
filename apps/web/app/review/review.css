@@ -289,3 +289,99 @@
     height: 450px;
   }
 }
+.casework {
+  overflow-wrap: anywhere;
+}
+.casework details {
+  margin: 1rem 0;
+}
+.question-card {
+  border: 1px solid var(--line, #cbd5d4);
+  border-radius: 12px;
+  padding: 1rem;
+}
+.question-card > summary {
+  font-weight: 650;
+  cursor: pointer;
+}
+.question-card > summary span {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 400;
+  margin-top: 0.4rem;
+}
+.casework fieldset {
+  min-width: 0;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #cbd5d4;
+  border-radius: 8px;
+}
+.casework label {
+  display: block;
+  margin: 0.8rem 0;
+}
+.casework textarea,
+.casework select {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem;
+  font: inherit;
+  border: 1px solid #899d98;
+  border-radius: 6px;
+  background: white;
+  color: #18352e;
+}
+.casework button {
+  margin: 0.35rem 0.35rem 0.35rem 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.casework input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  vertical-align: middle;
+  margin-right: 0.45rem;
+}
+.question-amounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 0.7rem;
+}
+.question-amounts dd {
+  margin: 0.3rem 0 0;
+  font-weight: 650;
+}
+.question-amounts dt {
+  text-transform: capitalize;
+  font-size: 0.85rem;
+}
+.contractor-question,
+.saved-reply {
+  padding: 1rem;
+  background: #eff5f1;
+  border-radius: 8px;
+}
+.reply-text {
+  white-space: pre-wrap;
+}
+.snapshot-list {
+  padding-left: 1.25rem;
+}
+.snapshot-list span {
+  display: block;
+}
+.historical-snapshot {
+  border: 2px solid #607c70;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 10px;
+}
+.casework pre {
+  max-height: 26rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

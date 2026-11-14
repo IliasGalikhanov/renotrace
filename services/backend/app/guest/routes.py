@@ -9,6 +9,14 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .calculation import ProjectResponse
+from .casework_models import (
+    AttachmentCommand,
+    CardCommand,
+    ReplyCommand,
+    ReplyEdit,
+    Snapshot,
+    SnapshotSummary,
+)
 from .extraction import MAX_BYTES
 from .models import Document, ReviewCommand, Session, Ticket, TicketRequest
 from .service import Reviews
@@ -48,6 +56,45 @@ def review(
     project_id: str, command: ReviewCommand, reviews: Service, secret: Secret
 ) -> ProjectResponse:
     return reviews.review(project_id, secret, command)
+
+
+@router.get("/projects/{project_id}/snapshots", response_model=list[SnapshotSummary])
+def snapshots(project_id: str, reviews: Service, secret: Secret) -> list[SnapshotSummary]:
+    return reviews.casework.snapshots(project_id, secret)
+
+
+@router.get("/projects/{project_id}/snapshots/{snapshot_id}", response_model=Snapshot)
+def snapshot(project_id: str, snapshot_id: str, reviews: Service, secret: Secret) -> Snapshot:
+    """Read the stored calculation verbatim. No current normalization or ledger call."""
+    return reviews.casework.snapshot(project_id, secret, snapshot_id)
+
+
+@router.post("/projects/{project_id}/replies", response_model=ProjectResponse)
+def reply(
+    project_id: str, command: ReplyCommand, reviews: Service, secret: Secret
+) -> ProjectResponse:
+    return reviews.casework.mutate(project_id, secret, "reply", command)
+
+
+@router.post("/projects/{project_id}/replies/{reply_id}/edit", response_model=ProjectResponse)
+def edit_reply(
+    project_id: str, reply_id: str, command: ReplyEdit, reviews: Service, secret: Secret
+) -> ProjectResponse:
+    return reviews.casework.mutate(project_id, secret, "edit_reply", command, reply_id)
+
+
+@router.post("/projects/{project_id}/questions/{question_id}/state", response_model=ProjectResponse)
+def question_state(
+    project_id: str, question_id: str, command: CardCommand, reviews: Service, secret: Secret
+) -> ProjectResponse:
+    return reviews.casework.mutate(project_id, secret, "question_state", command, question_id)
+
+
+@router.post("/projects/{project_id}/attachments", response_model=ProjectResponse)
+def attachments(
+    project_id: str, command: AttachmentCommand, reviews: Service, secret: Secret
+) -> ProjectResponse:
+    return reviews.casework.mutate(project_id, secret, "attachments", command)
 
 
 @router.post("/projects/{project_id}/tickets", response_model=Ticket)

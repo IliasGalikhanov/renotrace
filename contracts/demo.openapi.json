@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "RenoTrace API",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "paths": {
     "/api/demo/scenarios": {
@@ -274,6 +274,360 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ReviewCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/snapshots": {
+      "get": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Snapshots",
+        "operationId": "snapshots_api_guest_projects__project_id__snapshots_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SnapshotSummary"
+                  },
+                  "title": "Response Snapshots Api Guest Projects  Project Id  Snapshots Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/snapshots/{snapshot_id}": {
+      "get": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Snapshot",
+        "description": "Read the stored calculation verbatim. No current normalization or ledger call.",
+        "operationId": "snapshot_api_guest_projects__project_id__snapshots__snapshot_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Snapshot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/replies": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Reply",
+        "operationId": "reply_api_guest_projects__project_id__replies_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/replies/{reply_id}/edit": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Edit Reply",
+        "operationId": "edit_reply_api_guest_projects__project_id__replies__reply_id__edit_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "reply_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Reply Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/questions/{question_id}/state": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Question State",
+        "operationId": "question_state_api_guest_projects__project_id__questions__question_id__state_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/attachments": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Attachments",
+        "operationId": "attachments_api_guest_projects__project_id__attachments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachmentCommand"
               }
             }
           }
@@ -909,6 +1263,41 @@
         ],
         "title": "AssignContractor"
       },
+      "AttachmentCommand": {
+        "properties": {
+          "mutation_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9-]{36}$",
+            "title": "Mutation Id"
+          },
+          "question_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Question Ids"
+          },
+          "file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "File Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mutation_id",
+          "question_ids",
+          "file_ids"
+        ],
+        "title": "AttachmentCommand"
+      },
       "Billing": {
         "properties": {
           "id": {
@@ -1269,6 +1658,223 @@
           "snippet"
         ],
         "title": "Candidate"
+      },
+      "CardCommand": {
+        "properties": {
+          "mutation_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9-]{36}$",
+            "title": "Mutation Id"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "evidence_state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "awaiting_explanation",
+                  "answer_insufficient",
+                  "explained_verified",
+                  "contradiction_remains",
+                  "needs_recheck"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence State"
+          },
+          "owner_decision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "continue_clarifying",
+                  "accept_explanation",
+                  "stop_unresolved"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Decision"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Note"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "source_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Source Refs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mutation_id",
+          "expected_version",
+          "note"
+        ],
+        "title": "CardCommand"
+      },
+      "CardEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "evidence_state": {
+            "type": "string",
+            "enum": [
+              "awaiting_explanation",
+              "answer_insufficient",
+              "explained_verified",
+              "contradiction_remains",
+              "needs_recheck"
+            ],
+            "title": "Evidence State"
+          },
+          "owner_decision": {
+            "type": "string",
+            "enum": [
+              "continue_clarifying",
+              "accept_explanation",
+              "stop_unresolved"
+            ],
+            "title": "Owner Decision"
+          },
+          "financial_revision": {
+            "type": "integer",
+            "title": "Financial Revision"
+          },
+          "basis_fingerprint": {
+            "type": "string",
+            "title": "Basis Fingerprint"
+          },
+          "record_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Record Ids"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "source_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Refs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "kind",
+          "detail",
+          "evidence_state",
+          "owner_decision",
+          "financial_revision",
+          "basis_fingerprint"
+        ],
+        "title": "CardEvent"
+      },
+      "CaseworkView": {
+        "properties": {
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionCard"
+            },
+            "type": "array",
+            "title": "Cards"
+          },
+          "replies": {
+            "items": {
+              "$ref": "#/components/schemas/Reply"
+            },
+            "type": "array",
+            "title": "Replies"
+          },
+          "snapshots": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotSummary"
+            },
+            "type": "array",
+            "title": "Snapshots"
+          },
+          "latest_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Snapshot Id"
+          },
+          "legacy_audit_count": {
+            "type": "integer",
+            "title": "Legacy Audit Count",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CaseworkView"
       },
       "Cash": {
         "properties": {
@@ -2667,6 +3273,115 @@
         ],
         "title": "NormalizationResult"
       },
+      "Observation": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "anchors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Anchors"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "contractor_question": {
+            "type": "string",
+            "title": "Contractor Question"
+          },
+          "affects": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affects"
+          },
+          "metric_values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Metric Values"
+          },
+          "amounts_cents": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Amounts Cents"
+          },
+          "record_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Record Ids"
+          },
+          "source_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Refs"
+          },
+          "file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "File Ids"
+          },
+          "financial_revision": {
+            "type": "integer",
+            "title": "Financial Revision"
+          },
+          "basis_fingerprint": {
+            "type": "string",
+            "title": "Basis Fingerprint"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "anchors",
+          "message",
+          "contractor_question",
+          "affects",
+          "metric_values",
+          "amounts_cents",
+          "record_ids",
+          "source_refs",
+          "file_ids",
+          "financial_revision",
+          "basis_fingerprint"
+        ],
+        "title": "Observation"
+      },
       "Page": {
         "properties": {
           "number": {
@@ -3041,6 +3756,9 @@
           },
           "result": {
             "$ref": "#/components/schemas/ReviewResult"
+          },
+          "casework": {
+            "$ref": "#/components/schemas/CaseworkView"
           }
         },
         "additionalProperties": false,
@@ -3119,6 +3837,102 @@
           "message"
         ],
         "title": "Question"
+      },
+      "QuestionCard": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "default": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "observation": {
+            "$ref": "#/components/schemas/Observation"
+          },
+          "evidence_state": {
+            "type": "string",
+            "enum": [
+              "awaiting_explanation",
+              "answer_insufficient",
+              "explained_verified",
+              "contradiction_remains",
+              "needs_recheck"
+            ],
+            "title": "Evidence State",
+            "default": "awaiting_explanation"
+          },
+          "owner_decision": {
+            "type": "string",
+            "enum": [
+              "continue_clarifying",
+              "accept_explanation",
+              "stop_unresolved"
+            ],
+            "title": "Owner Decision",
+            "default": "continue_clarifying"
+          },
+          "reply_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reply Ids"
+          },
+          "file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "File Ids"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/CardEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "verified_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Snapshot Id"
+          },
+          "verified_source_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Verified Source Refs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "observation"
+        ],
+        "title": "QuestionCard"
       },
       "RecalculateRequest": {
         "properties": {
@@ -3252,6 +4066,161 @@
         ],
         "title": "RecordChoice"
       },
+      "Reply": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Question Ids"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/ReplyVersion"
+            },
+            "type": "array",
+            "title": "Versions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "question_ids",
+          "versions"
+        ],
+        "title": "Reply"
+      },
+      "ReplyCommand": {
+        "properties": {
+          "mutation_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9-]{36}$",
+            "title": "Mutation Id"
+          },
+          "question_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Question Ids"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "File Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mutation_id",
+          "question_ids",
+          "text"
+        ],
+        "title": "ReplyCommand"
+      },
+      "ReplyEdit": {
+        "properties": {
+          "mutation_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9-]{36}$",
+            "title": "Mutation Id"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "File Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mutation_id",
+          "expected_version",
+          "text"
+        ],
+        "title": "ReplyEdit"
+      },
+      "ReplyVersion": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "file_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "File Ids"
+          },
+          "added_by": {
+            "type": "string",
+            "title": "Added By"
+          },
+          "added_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Added At"
+          },
+          "origin": {
+            "type": "string",
+            "const": "owner_reported_contractor",
+            "title": "Origin",
+            "default": "owner_reported_contractor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "version",
+          "text",
+          "file_ids",
+          "added_by",
+          "added_at"
+        ],
+        "title": "ReplyVersion"
+      },
       "Review": {
         "properties": {
           "extraction_review": {
@@ -3342,6 +4311,18 @@
       },
       "ReviewCommand": {
         "properties": {
+          "mutation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9-]{36}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mutation Id"
+          },
           "expected_revision": {
             "type": "integer",
             "minimum": 0.0,
@@ -3760,6 +4741,72 @@
           "project_id"
         ],
         "title": "Session"
+      },
+      "Snapshot": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/SnapshotSummary"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "summary",
+          "payload"
+        ],
+        "title": "Snapshot"
+      },
+      "SnapshotSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "financial_revision": {
+            "type": "integer",
+            "title": "Financial Revision"
+          },
+          "contract_version": {
+            "type": "string",
+            "title": "Contract Version"
+          },
+          "remaining_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Cents"
+          },
+          "question_count": {
+            "type": "integer",
+            "title": "Question Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "financial_revision",
+          "contract_version",
+          "remaining_cents",
+          "question_count"
+        ],
+        "title": "SnapshotSummary"
       },
       "Source": {
         "properties": {

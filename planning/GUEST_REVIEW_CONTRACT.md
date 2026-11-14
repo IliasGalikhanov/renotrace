@@ -1,4 +1,6 @@
-# Stage 6: private guest document review
+# Private guest document review
+
+Stage 7 extends this foundation with [persistent questions, replies and immutable calculation snapshots](CASEWORK_CONTRACT.md). The separate contract documents the new routes, two state axes, idempotency and additive migration. The original 24-hour lifetime and financial freshness checks are unchanged.
 
 The main flow is **Review my invoice** → upload current invoice and supporting documents → check candidates and links → calculate. No account, email, password form or Supabase Auth. **Try sample** remains a separate, stateless synthetic demo. Guest calculations never load demo fixtures.
 

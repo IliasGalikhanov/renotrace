@@ -13,7 +13,7 @@ from app.guest.models import Problem
 from app.guest.routes import router as guest_router
 from app.guest.runtime import lifespan
 
-app = FastAPI(title="RenoTrace API", version="0.6.0", lifespan=lifespan)
+app = FastAPI(title="RenoTrace API", version="0.7.0", lifespan=lifespan)
 app.include_router(demo_router)
 app.include_router(guest_router)
 app.add_middleware(

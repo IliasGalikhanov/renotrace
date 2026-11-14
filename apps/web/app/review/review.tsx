@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Casework, { type CaseworkView } from "./casework";
 
 type Kind =
   | "agreement"
@@ -61,7 +62,7 @@ type Source = {
   text: string;
   origin: string;
 };
-type Result = {
+export type Result = {
   calculation: {
     requested_now_cents: number | null;
     remaining_commitment_cents: number | null;
@@ -93,7 +94,7 @@ type Result = {
     }[];
   };
 };
-type State = {
+export type State = {
   project: {
     id: string;
     revision: number;
@@ -102,6 +103,7 @@ type State = {
     review: { basis_revision: number; command: Command } | null;
   };
   result: Result;
+  casework: CaseworkView;
 };
 const labels: Record<Kind, string> = {
   agreement: "Estimate / contract price",
@@ -180,6 +182,7 @@ export default function GuestReview() {
     page: number;
   } | null>(null);
   const generation = useRef(0);
+  const reviewRetry = useRef<{ key: string; id: string } | null>(null);
   const active = useRef(false);
   const pending = !!state?.project.documents.some((d) =>
     ["queued", "processing"].includes(d.status),
@@ -276,13 +279,19 @@ export default function GuestReview() {
     const id = ++generation.current;
     setBusy("Checking your choices and calculating…");
     setError("");
+    const key = JSON.stringify(command);
+    if (reviewRetry.current?.key !== key)
+      reviewRetry.current = { key, id: crypto.randomUUID() };
     try {
       const next = await api<State>(
         `projects/${state.project.id}/review`,
         "POST",
-        command,
+        { ...command, mutation_id: reviewRetry.current.id },
       );
-      if (id === generation.current) accept(next);
+      if (id === generation.current) {
+        accept(next);
+        reviewRetry.current = null;
+      }
     } catch (e) {
       if (id === generation.current) setError((e as Error).message);
     } finally {
@@ -320,6 +329,23 @@ export default function GuestReview() {
         });
     } catch (e) {
       if (id === generation.current) setError((e as Error).message);
+    }
+  }
+
+  async function discuss(path: string, body: unknown): Promise<boolean> {
+    if (busy || dirty || pending) return false;
+    const id = ++generation.current;
+    setBusy("Saving discussion history…");
+    setError("");
+    try {
+      const next = await api<State>(path, "POST", body);
+      if (id === generation.current) accept(next);
+      return true;
+    } catch (e) {
+      if (id === generation.current) setError((e as Error).message);
+      return false;
+    } finally {
+      if (id === generation.current) setBusy("");
     }
   }
 
@@ -855,8 +881,20 @@ export default function GuestReview() {
                   <article>
                     <h3>Needs clarification</h3>
                     <strong>
-                      {state.result.questions.length || "No open questions"}
+                      {state.result.questions.length ||
+                        "No current calculation questions"}
                     </strong>
+                    <p>
+                      {
+                        state.casework.cards.filter(
+                          (c) => c.evidence_state !== "explained_verified",
+                        ).length
+                      }{" "}
+                      unresolved in review history below.
+                    </p>
+                    <small>
+                      Absence of questions does not confirm payment conditions.
+                    </small>
                   </article>
                 </div>
                 <ul>
@@ -914,6 +952,13 @@ export default function GuestReview() {
               </>
             )}
           </section>
+          <Casework
+            state={state}
+            disabled={!!busy || dirty || pending}
+            mutate={discuss}
+            read={api}
+            openSource={openSource}
+          />
           <section className="guest-delete">
             <p>
               This review is temporary. Deletion revokes access and removes your

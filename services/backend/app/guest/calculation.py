@@ -25,6 +25,7 @@ from app.normalization.models import (
     Source,
 )
 
+from .casework_models import CaseworkView
 from .extraction import cents
 from .models import Model, Problem, Project, RecordChoice, ReviewCommand
 
@@ -52,6 +53,7 @@ class ReviewResult(Model):
 class ProjectResponse(Model):
     project: Project
     result: ReviewResult
+    casework: CaseworkView = Field(default_factory=CaseworkView)
 
 
 def validate_command(project: Project, command: ReviewCommand) -> None:

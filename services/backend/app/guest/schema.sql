@@ -44,4 +44,36 @@ CREATE TABLE IF NOT EXISTS guest_review.audit (
     data jsonb NOT NULL
 );
 REVOKE ALL ON SCHEMA guest_review FROM PUBLIC;
+-- Additive stage 7 migration: existing audit rows are not calculation snapshots.
+CREATE TABLE IF NOT EXISTS guest_review.snapshots (
+    id text PRIMARY KEY,
+    project_id text NOT NULL REFERENCES guest_review.projects(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    data jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guest_review.question_cards (
+    id text PRIMARY KEY,
+    project_id text NOT NULL REFERENCES guest_review.projects(id) ON DELETE CASCADE,
+    data jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guest_review.replies (
+    id text PRIMARY KEY,
+    project_id text NOT NULL REFERENCES guest_review.projects(id) ON DELETE CASCADE,
+    data jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guest_review.discussion_operations (
+    project_id text NOT NULL REFERENCES guest_review.projects(id) ON DELETE CASCADE,
+    id text NOT NULL,
+    fingerprint text NOT NULL,
+    resource_id text NOT NULL,
+    PRIMARY KEY (project_id, id)
+);
+CREATE INDEX IF NOT EXISTS snapshots_project ON guest_review.snapshots(project_id, created_at);
+CREATE INDEX IF NOT EXISTS cards_project ON guest_review.question_cards(project_id);
+CREATE INDEX IF NOT EXISTS replies_project ON guest_review.replies(project_id);
+CREATE OR REPLACE FUNCTION guest_review.immutable_snapshot() RETURNS trigger
+LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Calculation snapshots cannot be updated'; END $$;
+DROP TRIGGER IF EXISTS immutable_snapshot ON guest_review.snapshots;
+CREATE TRIGGER immutable_snapshot BEFORE UPDATE ON guest_review.snapshots
+FOR EACH ROW EXECUTE FUNCTION guest_review.immutable_snapshot();
 REVOKE ALL ON ALL TABLES IN SCHEMA guest_review FROM PUBLIC;

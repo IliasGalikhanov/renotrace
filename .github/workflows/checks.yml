@@ -75,6 +75,18 @@ jobs:
         run: |
           docker compose -f infra/guest.compose.yml up -d --build
           uv run --locked python tools/setup_guest_local.py
+          ready=0
+          for attempt in {1..30}; do
+            if curl --fail --silent --max-time 2 http://127.0.0.1:8106/healthz; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            docker compose -f infra/guest.compose.yml logs api
+            exit 1
+          fi
       - name: Real PostgreSQL, private objects, OCR and restart tests
         if: runner.os == 'Linux'
         env:

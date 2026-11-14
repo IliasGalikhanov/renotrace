@@ -69,6 +69,20 @@ The first public backend preflight returned HTTP 500 because the explicit stage 
 
 Public regression on 2026-11-15: **12 remote demo browser tests passed** in 43.1 seconds at 360/768/1440 px, including FIN-01/11/16, source disclosure, reset and independent visitors. Backend `/healthz` returned `ok`; OpenAPI reports `0.7.0` and both snapshot routes. These checks do not establish the final runtime SHA or verify the new frontend journey.
 
-Public frontend release and final history-browser verification remain pending. The built-in browser tool became unavailable during release (`Trusted RPC service is not configured: browser`; its advertised skill file is missing). Render deployment of `6cb667c` had been submitted, but its final status was not observed. Vercel's Production form was prepared for that same SHA but not submitted. The user was asked to complete the prepared deployment and confirm Render Live / Vercel Ready. Current stage 7 screenshots are from local acceptance, not public acceptance.
+Published application SHA: `6cb667c5308a9cee98b722f7b3956dcd8ffd58dc`. Frontend: <https://renotrace.vercel.app/review>. Backend: <https://renotrace-api.onrender.com>. The user completed the prepared Vercel deployment and confirmed Ready, and confirmed Render Live for `6cb667c`. Dashboard status is user-confirmed: after a laptop restart the built-in browser controller was unavailable (`Trusted RPC service is not configured: browser`; advertised skill file missing), so the agent could not independently record the final deployment IDs. Public behavior is checked independently by Playwright.
+
+Final public history acceptance: **3 passed in 9.1 minutes**, one complete journey at each of 360/768/1440 px. Tests upload real synthetic PDFs, review extracted facts, copy a question, save a reply without a new file, retry a lost response without duplication, edit the reply, independently accept/stop clarification, reload saved history, change the payment recipient and inspect a frozen old calculation. Current remaining changes from **$10,000 to $7,000** while the old snapshot remains **$10,000**; owner decisions do not alter money or erase uncertainty. Every test deletes its own review. The six stage 7 screenshots now come from this public run; visual inspection covered all three widths. A complete public journey took about three minutes with the existing free backend/storage, so this is functional acceptance, not a low-latency claim.
+
+After this public history run, the legacy remote demo regression was repeated against the newly deployed frontend: **12 passed in 45.4 seconds**. FIN-01/11/16, sources, reset, visitor isolation and all three viewport checks remain green.
+
+Reproduce public checks without local servers:
+
+```powershell
+$env:RENOTRACE_BASE_URL='https://renotrace.vercel.app'
+npm run test:guest -- --grep 'persistent question' --timeout=600000
+npm run test:remote
+```
+
+The documentation commit's Linux CI exposed a startup race: the first guest session request arrived before the API was ready and received a connection reset; the remaining 16 integration tests passed. Added a bounded `/healthz` readiness check before integration tests, with API logs and a failing exit if startup does not complete. Application code and the published SHA are unchanged by this CI correction.
 
 Before stage 7, both public services ran `fa3f23a37399098de978b7de84e81d55a81238e9`; backend deployment `dep-dbsb84rrjlhs73dncs8g`, frontend deployment `dpl_CVXsoVFPGaSYxQ9gvEExoFqSikfQ`. The additive rollback procedure is in [DEPLOYMENT.md](DEPLOYMENT.md#stage-7-migration-and-release).

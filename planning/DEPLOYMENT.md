@@ -4,6 +4,8 @@ See [stage 7 report](STAGE_7_REPORT.md) for the latest release gate. Stage 5 bel
 
 ## Stage 7 migration and release
 
+Published application: `6cb667c5308a9cee98b722f7b3956dcd8ffd58dc` at <https://renotrace.vercel.app/review>, backend <https://renotrace-api.onrender.com>. Render Live and Vercel Ready were confirmed by the owner on 2026-11-15; public test evidence and verification boundaries are recorded in [the stage report](STAGE_7_REPORT.md#release-gate). Later report/CI commits do not change the deployed application.
+
 No new service, environment variable or paid resource is needed. **Before deploying the stage 7 backend**, explicitly run the existing migration command from the checked checkout:
 
 ```powershell

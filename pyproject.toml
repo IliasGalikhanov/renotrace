@@ -52,7 +52,7 @@ files = ["services/backend/app"]
 
 [tool.coverage.run]
 branch = true
-source = ["app.ledger", "app.normalization"]
+source = ["app.ledger", "app.normalization", "app.demo"]
 
 [tool.coverage.report]
 show_missing = true

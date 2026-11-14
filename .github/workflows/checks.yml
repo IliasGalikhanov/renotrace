@@ -1,4 +1,4 @@
-name: Foundation checks
+name: RenoTrace checks
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
@@ -39,10 +39,34 @@ jobs:
       - name: Python static types
         run: uv run --locked mypy
       - name: Ledger, API and CLI tests
-        run: uv run --locked pytest --cov=app.ledger --cov=app.normalization --cov-report=term-missing
+        run: uv run --locked pytest --cov=app.ledger --cov=app.normalization --cov=app.demo --cov-report=term-missing
       - name: Production web build
         run: npm run build
+      - name: Frontend formatting
+        run: npm run format:check
       - name: TypeScript
         run: npm run typecheck
       - name: Real HTTP startup checks
         run: uv run --locked python tools/smoke_test.py
+      - name: Install Chromium (Linux)
+        if: runner.os == 'Linux'
+        run: npx playwright install --with-deps chromium
+      - name: Install Chromium (Windows)
+        if: runner.os == 'Windows'
+        run: npx playwright install chromium
+      - name: Browser journeys and responsive captures
+        run: npm run test:e2e
+      - name: Build backend container
+        if: runner.os == 'Linux'
+        run: docker build -f infra/backend.Dockerfile -t renotrace-demo:test .
+      - name: Check container health and demo
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker run -d --name renotrace-demo-test -e PORT=8080 -p 127.0.0.1:8080:8080 renotrace-demo:test
+          trap 'docker logs renotrace-demo-test; docker rm -f renotrace-demo-test' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8080/healthz; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8080/api/demo/scenarios/FIN-11 | python -c 'import json,sys; assert json.load(sys.stdin)["calculation"]["billed_total_cents"] == 1350000'

@@ -74,16 +74,39 @@ def main():
                         cwd=ROOT,
                         stdout=log,
                         stderr=log,
+                        env={**os.environ, "BACKEND_URL": f"http://127.0.0.1:{api_port}"},
                         creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
                     )
                 )
             health = wait_http(processes[0], f"http://127.0.0.1:{api_port}/healthz")
             assert json.loads(health) == {"status": "ok", "service": "renotrace-api"}
             html = wait_http(processes[1], f"http://127.0.0.1:{web_port}/")
-            assert "RenoTrace" in html and "Coming soon." in html and '<html lang="en"' in html
+            assert "RenoTrace" in html and "Try sample" in html and '<html lang="en"' in html
+            assert "Synthetic demo" in html
+            demo_url = f"http://127.0.0.1:{web_port}/api/demo/scenarios/FIN-16"
+            baseline = json.loads(wait_http(processes[1], demo_url))
+            assert baseline["calculation"]["remaining_commitment_cents"] == 700000
+            request = urllib.request.Request(
+                demo_url + "/calculate",
+                data=json.dumps(
+                    {
+                        "actions": [
+                            {
+                                "kind": "assign_recipient",
+                                "record_id": "unknown",
+                                "answer": "contractor",
+                            }
+                        ]
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(request, timeout=10) as response:
+                assert json.load(response)["calculation"]["remaining_commitment_cents"] == 500000
             print(
-                "PASS: real FastAPI /healthz and built Next.js page "
-                "return expected HTTP 200 content."
+                "PASS: FastAPI health, built demo page and BFF -> normalization -> ledger "
+                "recipient recalculation (700000 -> 500000 cents)."
             )
         except Exception:
             log.seek(0)

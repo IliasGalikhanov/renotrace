@@ -1,0 +1,2983 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "RenoTrace demo API",
+    "version": "0.4.0"
+  },
+  "paths": {
+    "/api/demo/scenarios": {
+      "get": {
+        "tags": [
+          "Synthetic demo (no persistence)"
+        ],
+        "summary": "Scenarios",
+        "description": "List server-owned synthetic examples. No private cases or visitor state.",
+        "operationId": "scenarios_api_demo_scenarios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Scenarios Api Demo Scenarios Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/scenarios/{scenario_id}": {
+      "get": {
+        "tags": [
+          "Synthetic demo (no persistence)"
+        ],
+        "summary": "Scenario",
+        "description": "Return source excerpts, immutable example history and its actual initial calculation.",
+        "operationId": "scenario_api_demo_scenarios__scenario_id__get",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown scenario"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/scenarios/{scenario_id}/calculate": {
+      "post": {
+        "tags": [
+          "Synthetic demo (no persistence)"
+        ],
+        "summary": "Recalculate",
+        "description": "Rebuild a fresh example and apply allowed actions, last answer per scope wins.\n\nNo persistence, sessions, transactions, permanent cases or snapshots. Send the\nentire current action list on every request; an empty list resets the sample.\nDomain revision/uncertainty checks still apply. Arbitrary HistoryInput is not accepted.",
+        "operationId": "recalculate_api_demo_scenarios__scenario_id__calculate_post",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecalculateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown scenario"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionOption": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "assign_recipient",
+            "title": "Kind",
+            "default": "assign_recipient"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "answers": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "contractor",
+                "other",
+                "unknown"
+              ]
+            },
+            "type": "array",
+            "title": "Answers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "record_id",
+          "label",
+          "answers"
+        ],
+        "title": "ActionOption"
+      },
+      "Adjustment": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review",
+            "default": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "unknown",
+              "lifecycle": "active"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "const": "adjustment",
+            "title": "Kind",
+            "default": "adjustment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "record_id",
+          "version",
+          "effective_date",
+          "amount_cents",
+          "contractor_id",
+          "evidence_refs",
+          "origin"
+        ],
+        "title": "Adjustment"
+      },
+      "Agreement": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review",
+            "default": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "unknown",
+              "lifecycle": "active"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "const": "agreement",
+            "title": "Kind",
+            "default": "agreement"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "record_id",
+          "version",
+          "effective_date",
+          "amount_cents",
+          "contractor_id",
+          "evidence_refs",
+          "origin"
+        ],
+        "title": "Agreement"
+      },
+      "Allocation": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Amount Cents"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "cash_event_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Cash Event Id"
+          },
+          "charge_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Charge Id"
+          },
+          "reverses_allocation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverses Allocation Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "amount_cents",
+          "evidence_refs",
+          "origin",
+          "cash_event_id",
+          "charge_id"
+        ],
+        "title": "Allocation"
+      },
+      "AmountRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Amount Cents"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "amount_cents",
+          "evidence_refs",
+          "origin"
+        ],
+        "title": "AmountRecord"
+      },
+      "AssignContractor": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Target Id"
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor Id"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "kind": {
+            "type": "string",
+            "const": "assign_contractor",
+            "title": "Kind",
+            "default": "assign_contractor"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "target_id",
+          "basis_revision",
+          "actor_id",
+          "decided_at",
+          "evidence_refs",
+          "contractor_id"
+        ],
+        "title": "AssignContractor"
+      },
+      "Billing": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review",
+            "default": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "unknown",
+              "lifecycle": "active"
+            }
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "relationship_review": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "accepted",
+              "rejected",
+              "invalidated"
+            ],
+            "title": "Relationship Review",
+            "default": "proposed"
+          },
+          "relationship_actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationship Actor Id"
+          },
+          "relationship_reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationship Reviewed At"
+          },
+          "kind": {
+            "type": "string",
+            "const": "billing",
+            "title": "Kind",
+            "default": "billing"
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "incremental_charge",
+              "cumulative_valuation",
+              "balance_statement",
+              "credit_note",
+              "unknown"
+            ],
+            "title": "Basis"
+          },
+          "coverage": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Coverage",
+            "default": []
+          },
+          "coverage_confirmed": {
+            "type": "boolean",
+            "title": "Coverage Confirmed",
+            "default": false
+          },
+          "previous_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Id"
+          },
+          "starts_at_zero": {
+            "type": "boolean",
+            "title": "Starts At Zero",
+            "default": false
+          },
+          "credit_target_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credit Target Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "record_id",
+          "version",
+          "effective_date",
+          "amount_cents",
+          "contractor_id",
+          "evidence_refs",
+          "origin",
+          "basis_revision",
+          "basis"
+        ],
+        "title": "Billing"
+      },
+      "BillingCredit": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Amount Cents"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "charge_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Charge Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "amount_cents",
+          "evidence_refs",
+          "origin",
+          "charge_id"
+        ],
+        "title": "BillingCredit"
+      },
+      "Cash": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review",
+            "default": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "unknown",
+              "lifecycle": "active"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "const": "cash",
+            "title": "Kind",
+            "default": "cash"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "pending",
+              "scheduled",
+              "failed",
+              "reversed"
+            ],
+            "title": "State"
+          },
+          "bank_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Account Id"
+          },
+          "bank_transaction_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Transaction Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "record_id",
+          "version",
+          "effective_date",
+          "amount_cents",
+          "contractor_id",
+          "evidence_refs",
+          "origin",
+          "state"
+        ],
+        "title": "Cash"
+      },
+      "CashBalance": {
+        "properties": {
+          "cash_event_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Cash Event Id"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Amount Cents"
+          },
+          "net_allocation_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Net Allocation Cents"
+          },
+          "unallocated_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Unallocated Cents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cash_event_id",
+          "amount_cents",
+          "net_allocation_cents",
+          "unallocated_cents"
+        ],
+        "title": "CashBalance"
+      },
+      "CashEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Amount Cents"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "pending",
+              "scheduled",
+              "failed",
+              "reversed"
+            ],
+            "title": "State"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "amount_cents",
+          "evidence_refs",
+          "origin",
+          "state"
+        ],
+        "title": "CashEvent"
+      },
+      "ChargeBalance": {
+        "properties": {
+          "charge_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Charge Id"
+          },
+          "charge_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Charge Cents"
+          },
+          "net_allocation_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Net Allocation Cents"
+          },
+          "remaining_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Remaining Cents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "charge_id",
+          "charge_cents",
+          "net_allocation_cents",
+          "remaining_cents"
+        ],
+        "title": "ChargeBalance"
+      },
+      "Conditions": {
+        "properties": {
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "condition_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition Text"
+          },
+          "satisfaction": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "user_reported"
+            ],
+            "title": "Satisfaction",
+            "default": "unknown"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Evidence Refs",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Conditions"
+      },
+      "ConfirmSemantics": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Target Id"
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor Id"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "kind": {
+            "type": "string",
+            "const": "confirm_semantics",
+            "title": "Kind",
+            "default": "confirm_semantics"
+          },
+          "answer": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "reject",
+              "unknown"
+            ],
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "target_id",
+          "basis_revision",
+          "actor_id",
+          "decided_at",
+          "evidence_refs",
+          "answer"
+        ],
+        "title": "ConfirmSemantics"
+      },
+      "DemoResult": {
+        "properties": {
+          "synthetic": {
+            "type": "boolean",
+            "const": true,
+            "title": "Synthetic",
+            "default": true
+          },
+          "persistence": {
+            "type": "string",
+            "const": "none",
+            "title": "Persistence",
+            "default": "none"
+          },
+          "scenario": {
+            "$ref": "#/components/schemas/ScenarioSummary"
+          },
+          "history": {
+            "$ref": "#/components/schemas/HistoryInput"
+          },
+          "source_contents": {
+            "items": {
+              "$ref": "#/components/schemas/SourceContent"
+            },
+            "type": "array",
+            "title": "Source Contents"
+          },
+          "record_titles": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Record Titles"
+          },
+          "conditions": {
+            "$ref": "#/components/schemas/Conditions"
+          },
+          "allowed_actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionOption"
+            },
+            "type": "array",
+            "title": "Allowed Actions"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/RecipientAction"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "normalization": {
+            "$ref": "#/components/schemas/NormalizationResult"
+          },
+          "calculation": {
+            "$ref": "#/components/schemas/LedgerResult"
+          },
+          "traces": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Trace"
+            },
+            "type": "object",
+            "title": "Traces"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scenario",
+          "history",
+          "source_contents",
+          "record_titles",
+          "conditions",
+          "allowed_actions",
+          "actions",
+          "explanation",
+          "normalization",
+          "calculation",
+          "traces"
+        ],
+        "title": "DemoResult"
+      },
+      "Disposition": {
+        "properties": {
+          "record": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Agreement"
+              },
+              {
+                "$ref": "#/components/schemas/Adjustment"
+              },
+              {
+                "$ref": "#/components/schemas/Cash"
+              },
+              {
+                "$ref": "#/components/schemas/PaymentRequest"
+              },
+              {
+                "$ref": "#/components/schemas/Billing"
+              },
+              {
+                "$ref": "#/components/schemas/PaymentAllocation"
+              }
+            ],
+            "title": "Record",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "adjustment": "#/components/schemas/Adjustment",
+                "agreement": "#/components/schemas/Agreement",
+                "allocation": "#/components/schemas/PaymentAllocation",
+                "billing": "#/components/schemas/Billing",
+                "cash": "#/components/schemas/Cash",
+                "payment_request": "#/components/schemas/PaymentRequest"
+              }
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Reason"
+          },
+          "canonical_record_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Record Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "decision_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Decision Ids"
+          },
+          "effective_contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Contractor Id"
+          },
+          "effective_semantic_review": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "user_asserted",
+              "reviewed_for_calculation"
+            ],
+            "title": "Effective Semantic Review"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "record",
+          "reason",
+          "evidence_refs",
+          "decision_ids",
+          "effective_contractor_id",
+          "effective_semantic_review"
+        ],
+        "title": "Disposition"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "service": {
+            "type": "string",
+            "const": "renotrace-api",
+            "title": "Service"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service"
+        ],
+        "title": "Health"
+      },
+      "HistoryInput": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Case Id"
+          },
+          "case_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Case Revision"
+          },
+          "contractor_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Contractor Id"
+          },
+          "cutoff_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Cutoff Date"
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "current_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Request Id"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "records": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Agreement"
+                },
+                {
+                  "$ref": "#/components/schemas/Adjustment"
+                },
+                {
+                  "$ref": "#/components/schemas/Cash"
+                },
+                {
+                  "$ref": "#/components/schemas/PaymentRequest"
+                },
+                {
+                  "$ref": "#/components/schemas/Billing"
+                },
+                {
+                  "$ref": "#/components/schemas/PaymentAllocation"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "adjustment": "#/components/schemas/Adjustment",
+                  "agreement": "#/components/schemas/Agreement",
+                  "allocation": "#/components/schemas/PaymentAllocation",
+                  "billing": "#/components/schemas/Billing",
+                  "cash": "#/components/schemas/Cash",
+                  "payment_request": "#/components/schemas/PaymentRequest"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "type": "array",
+            "title": "Links",
+            "default": []
+          },
+          "decisions": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SelectVersion"
+                },
+                {
+                  "$ref": "#/components/schemas/SelectAgreement"
+                },
+                {
+                  "$ref": "#/components/schemas/AssignContractor"
+                },
+                {
+                  "$ref": "#/components/schemas/ConfirmSemantics"
+                },
+                {
+                  "$ref": "#/components/schemas/ReviewLink"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "assign_contractor": "#/components/schemas/AssignContractor",
+                  "confirm_semantics": "#/components/schemas/ConfirmSemantics",
+                  "review_link": "#/components/schemas/ReviewLink",
+                  "select_agreement": "#/components/schemas/SelectAgreement",
+                  "select_version": "#/components/schemas/SelectVersion"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Decisions",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "case_id",
+          "case_revision",
+          "contractor_id",
+          "cutoff_date",
+          "sources",
+          "records"
+        ],
+        "title": "HistoryInput"
+      },
+      "LedgerInput": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Case Id"
+          },
+          "case_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Case Revision"
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "agreement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AmountRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/AmountRecord"
+            },
+            "type": "array",
+            "title": "Adjustments",
+            "default": []
+          },
+          "cash_events": {
+            "items": {
+              "$ref": "#/components/schemas/CashEvent"
+            },
+            "type": "array",
+            "title": "Cash Events"
+          },
+          "requested_now_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Now Cents"
+          },
+          "charges": {
+            "items": {
+              "$ref": "#/components/schemas/AmountRecord"
+            },
+            "type": "array",
+            "title": "Charges",
+            "default": []
+          },
+          "billing_credits": {
+            "items": {
+              "$ref": "#/components/schemas/BillingCredit"
+            },
+            "type": "array",
+            "title": "Billing Credits",
+            "default": []
+          },
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/Allocation"
+            },
+            "type": "array",
+            "title": "Allocations",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "case_id",
+          "case_revision",
+          "agreement",
+          "cash_events",
+          "requested_now_cents"
+        ],
+        "title": "LedgerInput"
+      },
+      "LedgerResult": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Case Id"
+          },
+          "case_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Case Revision"
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "rules_version": {
+            "type": "string",
+            "title": "Rules Version"
+          },
+          "input_fingerprint": {
+            "type": "string",
+            "title": "Input Fingerprint"
+          },
+          "commitment_total_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commitment Total Cents"
+          },
+          "completed_outgoing_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": 0.0,
+            "title": "Completed Outgoing Cents"
+          },
+          "completed_refunds_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": 0.0,
+            "title": "Completed Refunds Cents"
+          },
+          "net_paid_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Net Paid Cents"
+          },
+          "remaining_commitment_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Commitment Cents"
+          },
+          "requested_now_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Now Cents"
+          },
+          "commitment_record_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Commitment Record Ids"
+          },
+          "completed_cash_record_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Completed Cash Record Ids"
+          },
+          "excluded_cash_record_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Excluded Cash Record Ids"
+          },
+          "billed_total_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Billed Total Cents"
+          },
+          "charge_balances": {
+            "items": {
+              "$ref": "#/components/schemas/ChargeBalance"
+            },
+            "type": "array",
+            "title": "Charge Balances"
+          },
+          "positive_outstanding_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Positive Outstanding Cents"
+          },
+          "credit_balance_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Credit Balance Cents"
+          },
+          "net_allocations_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Net Allocations Cents"
+          },
+          "unallocated_cents": {
+            "type": "integer",
+            "maximum": 9000000000000.0,
+            "minimum": -9000000000000.0,
+            "title": "Unallocated Cents"
+          },
+          "cash_balances": {
+            "items": {
+              "$ref": "#/components/schemas/CashBalance"
+            },
+            "type": "array",
+            "title": "Cash Balances"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "case_id",
+          "case_revision",
+          "rules_version",
+          "input_fingerprint",
+          "commitment_total_cents",
+          "completed_outgoing_cents",
+          "completed_refunds_cents",
+          "net_paid_cents",
+          "remaining_commitment_cents",
+          "requested_now_cents",
+          "commitment_record_ids",
+          "completed_cash_record_ids",
+          "excluded_cash_record_ids",
+          "billed_total_cents",
+          "charge_balances",
+          "positive_outstanding_cents",
+          "credit_balance_cents",
+          "net_allocations_cents",
+          "unallocated_cents",
+          "cash_balances"
+        ],
+        "title": "LedgerResult"
+      },
+      "Link": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "supersedes",
+              "includes_adjustment"
+            ],
+            "title": "Kind"
+          },
+          "from_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "From Id"
+          },
+          "to_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "To Id"
+          },
+          "review": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "accepted",
+              "rejected",
+              "invalidated"
+            ],
+            "title": "Review"
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "from_id",
+          "to_id",
+          "review",
+          "basis_revision",
+          "evidence_refs"
+        ],
+        "title": "Link"
+      },
+      "NormalizationResult": {
+        "properties": {
+          "normalization_version": {
+            "type": "string",
+            "title": "Normalization Version"
+          },
+          "ledger_input": {
+            "$ref": "#/components/schemas/LedgerInput"
+          },
+          "included": {
+            "items": {
+              "$ref": "#/components/schemas/Disposition"
+            },
+            "type": "array",
+            "title": "Included"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/Disposition"
+            },
+            "type": "array",
+            "title": "Excluded"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "incomplete": {
+            "type": "boolean",
+            "title": "Incomplete"
+          },
+          "incomplete_metrics": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "commitment_total_cents",
+                "net_paid_cents",
+                "remaining_commitment_cents",
+                "requested_now_cents",
+                "billed_total_cents",
+                "charge_balances",
+                "positive_outstanding_cents",
+                "credit_balance_cents",
+                "net_allocations_cents",
+                "unallocated_cents",
+                "cash_balances"
+              ]
+            },
+            "type": "array",
+            "title": "Incomplete Metrics"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "type": "array",
+            "title": "Links"
+          },
+          "applied_decisions": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SelectVersion"
+                },
+                {
+                  "$ref": "#/components/schemas/SelectAgreement"
+                },
+                {
+                  "$ref": "#/components/schemas/AssignContractor"
+                },
+                {
+                  "$ref": "#/components/schemas/ConfirmSemantics"
+                },
+                {
+                  "$ref": "#/components/schemas/ReviewLink"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "assign_contractor": "#/components/schemas/AssignContractor",
+                  "confirm_semantics": "#/components/schemas/ConfirmSemantics",
+                  "review_link": "#/components/schemas/ReviewLink",
+                  "select_agreement": "#/components/schemas/SelectAgreement",
+                  "select_version": "#/components/schemas/SelectVersion"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Applied Decisions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "normalization_version",
+          "ledger_input",
+          "included",
+          "excluded",
+          "questions",
+          "incomplete",
+          "incomplete_metrics",
+          "sources",
+          "links",
+          "applied_decisions"
+        ],
+        "title": "NormalizationResult"
+      },
+      "PaymentAllocation": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review",
+            "default": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "unknown",
+              "lifecycle": "active"
+            }
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "relationship_review": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "accepted",
+              "rejected",
+              "invalidated"
+            ],
+            "title": "Relationship Review",
+            "default": "proposed"
+          },
+          "relationship_actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationship Actor Id"
+          },
+          "relationship_reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationship Reviewed At"
+          },
+          "kind": {
+            "type": "string",
+            "const": "allocation",
+            "title": "Kind",
+            "default": "allocation"
+          },
+          "cash_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Cash Id"
+          },
+          "charge_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Charge Id"
+          },
+          "reverses_allocation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverses Allocation Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "record_id",
+          "version",
+          "effective_date",
+          "amount_cents",
+          "contractor_id",
+          "evidence_refs",
+          "origin",
+          "basis_revision",
+          "cash_id",
+          "charge_id"
+        ],
+        "title": "PaymentAllocation"
+      },
+      "PaymentRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective Date"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "review": {
+            "$ref": "#/components/schemas/Review",
+            "default": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "unknown",
+              "lifecycle": "active"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "const": "payment_request",
+            "title": "Kind",
+            "default": "payment_request"
+          },
+          "mentioned_deposit_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mentioned Deposit Cents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "record_id",
+          "version",
+          "effective_date",
+          "amount_cents",
+          "contractor_id",
+          "evidence_refs",
+          "origin"
+        ],
+        "title": "PaymentRequest"
+      },
+      "Question": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Code"
+          },
+          "record_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Record Ids"
+          },
+          "decision_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Decision Ids",
+            "default": []
+          },
+          "affects": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "commitment_total_cents",
+                "net_paid_cents",
+                "remaining_commitment_cents",
+                "requested_now_cents",
+                "billed_total_cents",
+                "charge_balances",
+                "positive_outstanding_cents",
+                "credit_balance_cents",
+                "net_allocations_cents",
+                "unallocated_cents",
+                "cash_balances"
+              ]
+            },
+            "type": "array",
+            "title": "Affects"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "record_ids",
+          "affects",
+          "message"
+        ],
+        "title": "Question"
+      },
+      "RecalculateRequest": {
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/RecipientAction"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Actions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RecalculateRequest"
+      },
+      "RecipientAction": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "assign_recipient",
+            "title": "Kind"
+          },
+          "record_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Record Id"
+          },
+          "answer": {
+            "type": "string",
+            "enum": [
+              "contractor",
+              "other",
+              "unknown"
+            ],
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "record_id",
+          "answer"
+        ],
+        "title": "RecipientAction"
+      },
+      "Review": {
+        "properties": {
+          "extraction_review": {
+            "type": "string",
+            "enum": [
+              "unreviewed",
+              "checked",
+              "corrected"
+            ],
+            "title": "Extraction Review",
+            "default": "unreviewed"
+          },
+          "extraction_actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction Actor Id"
+          },
+          "extraction_reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction Reviewed At"
+          },
+          "semantic_review": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "user_asserted",
+              "reviewed_for_calculation"
+            ],
+            "title": "Semantic Review",
+            "default": "unknown"
+          },
+          "semantic_actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semantic Actor Id"
+          },
+          "semantic_reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semantic Reviewed At"
+          },
+          "lifecycle": {
+            "type": "string",
+            "enum": [
+              "active",
+              "superseded",
+              "void",
+              "stale"
+            ],
+            "title": "Lifecycle",
+            "default": "active"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Review"
+      },
+      "ReviewLink": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Target Id"
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor Id"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "kind": {
+            "type": "string",
+            "const": "review_link",
+            "title": "Kind",
+            "default": "review_link"
+          },
+          "answer": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "reject",
+              "unknown"
+            ],
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "target_id",
+          "basis_revision",
+          "actor_id",
+          "decided_at",
+          "evidence_refs",
+          "answer"
+        ],
+        "title": "ReviewLink"
+      },
+      "ScenarioSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description"
+        ],
+        "title": "ScenarioSummary"
+      },
+      "SelectAgreement": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Target Id"
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor Id"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "kind": {
+            "type": "string",
+            "const": "select_agreement",
+            "title": "Kind",
+            "default": "select_agreement"
+          },
+          "selected_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "target_id",
+          "basis_revision",
+          "actor_id",
+          "decided_at",
+          "evidence_refs",
+          "selected_id"
+        ],
+        "title": "SelectAgreement"
+      },
+      "SelectVersion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Target Id"
+          },
+          "basis_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Basis Revision"
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor Id"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence Refs"
+          },
+          "kind": {
+            "type": "string",
+            "const": "select_version",
+            "title": "Kind",
+            "default": "select_version"
+          },
+          "selected_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "target_id",
+          "basis_revision",
+          "actor_id",
+          "decided_at",
+          "evidence_refs",
+          "selected_id"
+        ],
+        "title": "SelectVersion"
+      },
+      "Source": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Id"
+          },
+          "case_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Case Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "document",
+              "bank_record",
+              "user_statement",
+              "derived"
+            ],
+            "title": "Origin"
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Locator"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "case_id",
+          "version",
+          "origin",
+          "locator"
+        ],
+        "title": "Source"
+      },
+      "SourceContent": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Source Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "excerpt": {
+            "type": "string",
+            "title": "Excerpt"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "title",
+          "excerpt"
+        ],
+        "title": "SourceContent"
+      },
+      "Trace": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9000000000000.0,
+                "minimum": -9000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula"
+          },
+          "record_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Record Ids"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "title": "Source Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "amount_cents",
+          "formula",
+          "record_ids",
+          "source_ids"
+        ],
+        "title": "Trace"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

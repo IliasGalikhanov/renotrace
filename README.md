@@ -4,11 +4,19 @@
 
 RenoTrace traces a renovation invoice back to recorded terms, changes, and payments. The requested amount, calculated remainder, payment conditions, and unresolved questions are separate concepts.
 
-## Current status: stage 3
+## Current status: stage 4
 
-Implemented: a runnable Next.js/TypeScript shell, a FastAPI health endpoint, a pure Python ledger, and a pure structured-history normalization module. Normalization selects confirmed estimate versions, removes included changes, filters payments/refunds, reconciles bank identities, applies explicit user decisions, and returns unresolved questions and provenance. Stage 3 adds typed billing, comparable cumulative valuations, targeted credit notes, explicit partial payment/refund allocations, invoice balances and unallocated cash. Both domain modules run without a browser, AI, database, or network.
+Implemented: an interactive English synthetic demo, a restricted public FastAPI demo API, a server-side Next.js BFF, a pure Python ledger, and a pure structured-history normalization module. Normalization selects confirmed estimate versions, removes included changes, filters payments/refunds, reconciles bank identities, applies explicit user decisions, and returns unresolved questions and provenance. Stage 3 adds typed billing, comparable cumulative valuations, targeted credit notes, explicit partial payment/refund allocations, invoice balances and unallocated cash. Both domain modules run without a browser, AI, database, or network. The demo calls them on the server for every recalculation; browser code only formats returned amounts.
 
-Not implemented: raw document extraction/OCR, inferred document matching, authentication, persistence, worker queue, reports, checkout, or deployment. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The web page is only a placeholder. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
+Not implemented: raw document extraction/OCR, inferred document matching, authentication, persistence, worker queue, exports, checkout, or hosted deployment. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The demo runs without registration and never saves visitor decisions. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
+
+## Try the interactive demo
+
+Start the backend and frontend using the commands below, then open [localhost:3000](http://127.0.0.1:3000) and select **Try sample**. FIN-01 explains the $800 credit and $4,700 remainder. FIN-16 lets you assign the unknown $2,000 transfer: the remainder changes **$7,000 → $5,000 → $7,000**; “I don't know” restores the provisional state. FIN-11 traces the $8,500 cumulative increment and $10,500 open invoice balances.
+
+Each amount can be opened to inspect participating records and inline synthetic source excerpts. Conditions without supplied evidence display **Unknown**. Reset/reload discards decisions; two visitors do not share state. Loading hides old figures, and errors have retry controls.
+
+See the [actual demo API contract](planning/DEMO_API_CONTRACT.md), [exported implemented OpenAPI](contracts/demo.openapi.json), [deployment preparation](planning/DEPLOYMENT.md) and [stage 4 report with screenshots](planning/STAGE_4_REPORT.md). The original private OpenAPI remains a design document, not implemented routes.
 
 ## Install on Windows
 
@@ -96,11 +104,12 @@ API, in one terminal:
 .\scripts\uv.ps1 run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Health: [localhost:8000/healthz](http://127.0.0.1:8000/healthz). Only `/healthz` and FastAPI's generated documentation are exposed; the private financial routes in the design contract are not implemented.
+Health: [localhost:8000/healthz](http://127.0.0.1:8000/healthz). Also available: `/api/demo/scenarios`, `/api/demo/scenarios/{id}`, and POST `/api/demo/scenarios/{id}/calculate`. The actual schema is `/openapi.json`; private financial routes remain unimplemented.
 
-Web, in another terminal:
+Web, in another terminal (copy the example once, or set BACKEND_URL in the process environment):
 
 ```powershell
+Copy-Item .env.example apps/web/.env.local
 npm run dev
 ```
 
@@ -114,34 +123,39 @@ npm start
 ## Run the checks
 
 ```powershell
-.\scripts\uv.ps1 run --locked pytest --cov=app.ledger --cov=app.normalization --cov-report=term-missing
+.\scripts\uv.ps1 run --locked pytest --cov=app.ledger --cov=app.normalization --cov=app.demo --cov-report=term-missing
 .\scripts\uv.ps1 run --locked ruff check services/backend tools/smoke_test.py
 .\scripts\uv.ps1 run --locked ruff format --check services/backend tools/smoke_test.py
 .\scripts\uv.ps1 run --locked mypy
 .\scripts\uv.ps1 run --locked python tools/validate_spec.py
 npm run build
 npm run typecheck
+npm run format:check
 .\scripts\uv.ps1 run --locked python tools/smoke_test.py
+npx playwright install chromium
+npm run test:e2e
 ```
 
-The smoke check starts actual FastAPI and built Next.js servers on temporary loopback ports, checks HTTP 200 and expected response content, then stops both. Tests require local loopback sockets; a network sandbox that blocks Python's local socket pair can stall ASGI startup. Run these checks in a normal terminal. Pytest creates `.pytest_tmp` directly under the repository root, so a fresh checkout needs no pre-existing cache directory.
+The smoke check starts actual FastAPI and built Next.js servers on temporary loopback ports, checks HTTP 200 and expected response content, verifies a real BFF recipient recalculation ($7,000 → $5,000), then stops both. Tests require local loopback sockets; a network sandbox that blocks Python's local socket pair can stall ASGI startup. Run these checks in a normal terminal. Pytest creates `.pytest_tmp` directly under the repository root, so a fresh checkout needs no pre-existing cache directory.
 
-The stage 1 FIN-01…FIN-16 tests exercise the calculator with supplied normalized records. Stage 2 adds 130 tests of structured inputs, version/link decisions, estimate replacement and included changes, cash identity conflicts, review/origin separation, cutoff dates, invalid references, cycles, stale/conflicting decisions, CLI behavior and order independence. Hypothesis permutes records, sources, links and decisions; repeated normalization does not create financial events. Stage 2.1 adds 8 regression/property tests and enforces that every UNRESOLVED_TRANSACTION exclusion has a paid/remainder question and provisional flags. Stage 3 adds 93 tests covering billing coverage, cumulative predecessors, credit notes, partial allocations, canonical cash capacity, refund limits, versions, dates, evidence, CLI, order/repeat invariance and per-payment conservation. The combined suite has 322 tests (99.84% domain statement/branch coverage in the stage 3 run). Domain coverage includes branches and a 95% minimum gate.
+The stage 1 FIN-01…FIN-16 tests exercise the calculator with supplied normalized records. Stage 2 adds 130 tests of structured inputs, version/link decisions, estimate replacement and included changes, cash identity conflicts, review/origin separation, cutoff dates, invalid references, cycles, stale/conflicting decisions, CLI behavior and order independence. Hypothesis permutes records, sources, links and decisions; repeated normalization does not create financial events. Stage 2.1 adds 8 regression/property tests and enforces that every UNRESOLVED_TRANSACTION exclusion has a paid/remainder question and provisional flags. Stage 3 adds 93 tests covering billing coverage, cumulative predecessors, credit notes, partial allocations, canonical cash capacity, refund limits, versions, dates, evidence, CLI, order/repeat invariance and per-payment conservation. Stage 4 adds 25 API tests, bringing the Python suite to 347 tests, plus 30 Playwright checks across three viewport sizes. Browser tests exercise the real API/BFF, isolation, reset, errors, forbidden actions, late replies, keyboard controls and source disclosures. Domain coverage includes branches and a 95% minimum gate.
 
 **Limits of these tests:** the old ledger fixtures still do not establish normalization. The new structured fixtures independently test the rules implemented in stages 2 and 3, using explicit source metadata, links and decisions. They do not establish OCR accuracy, automatic interpretation of invoices, fuzzy duplicate detection, or the truth of a user's assertion. Coverage is explicitly supplied as confirmed atomic work/period IDs; automatic overlap recognition and payment conditions remain outside this stage. Cumulative valuations are gross of separately recorded credit notes; documents with credits already embedded must be resolved before creating this input. Synthetic source references identify registry entries, not real source files.
 
-GitHub Actions runs installation, tests, lint/type checks, a production build, and HTTP smoke checks on Windows and Linux. See [the workflow](.github/workflows/checks.yml), [stage 3 report](planning/STAGE_3_REPORT.md), [stage 2.1 correction report](planning/STAGE_2_1_REPORT.md), [stage 2 report](planning/STAGE_2_REPORT.md), and the historical [stage 1 report](planning/STAGE_1_REPORT.md) for verification scope.
+GitHub Actions runs installation, tests, lint/type checks, a production build, HTTP smoke and Playwright checks on Windows and Linux, plus a container build/runtime check on Linux. See [the workflow](.github/workflows/checks.yml), [stage 4 report](planning/STAGE_4_REPORT.md), [stage 3 report](planning/STAGE_3_REPORT.md), [stage 2.1 correction report](planning/STAGE_2_1_REPORT.md), [stage 2 report](planning/STAGE_2_REPORT.md), and the historical [stage 1 report](planning/STAGE_1_REPORT.md) for verification scope.
 
 ## Structure and documentation
 
 ```text
-apps/web/                    Next.js App Router / TypeScript shell
+apps/web/                    Next.js demo UI and server-side BFF
 services/backend/app/        FastAPI, CLI, reference adapter
 services/backend/app/ledger/ Pure models and deterministic calculator
 services/backend/app/normalization/ Structured history, decisions and provenance
+services/backend/app/demo/   Stateless sample API and inline synthetic sources
 services/backend/tests/      Ledger, property, API and CLI tests
+tests/e2e/                   Playwright journeys and responsive captures
 services/backend/migrations/ Reserved for future migrations
-infra/                       Reserved for future deployment configuration
+infra/backend.Dockerfile     Container backend configuration
 contracts/ fixtures/ docs/  Supplied design baseline
 planning/                    Implementation handoff and verification report
 scripts/                     Windows local tooling wrappers

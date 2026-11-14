@@ -11,6 +11,7 @@ dependencies = [
 
 [project.scripts]
 renotrace-ledger = "app.cli:main"
+renotrace-normalize = "app.normalize_cli:main"
 
 [build-system]
 requires = ["hatchling==1.33.0"]
@@ -51,7 +52,7 @@ files = ["services/backend/app"]
 
 [tool.coverage.run]
 branch = true
-source = ["app.ledger"]
+source = ["app.ledger", "app.normalization"]
 
 [tool.coverage.report]
 show_missing = true

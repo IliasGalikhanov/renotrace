@@ -1,0 +1,1534 @@
+{
+  "version": "0.1",
+  "synthetic": true,
+  "notice": "Structured synthetic events and source metadata. Expected totals are independently specified; no OCR or allocations are tested.",
+  "cases": [
+    {
+      "id": "FIN-01",
+      "title": "Estimate, approved work, material credit and two payments",
+      "input": {
+        "case_id": "FIN-01",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": "invoice",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-01",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-01/base"
+          },
+          {
+            "id": "source:extra",
+            "case_id": "FIN-01",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-01/extra"
+          },
+          {
+            "id": "source:credit",
+            "case_id": "FIN-01",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-01/credit"
+          },
+          {
+            "id": "source:payment-1",
+            "case_id": "FIN-01",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-01/payment-1"
+          },
+          {
+            "id": "source:payment-2",
+            "case_id": "FIN-01",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-01/payment-2"
+          },
+          {
+            "id": "source:invoice",
+            "case_id": "FIN-01",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-01/invoice"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1200000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "extra",
+            "record_id": "extra",
+            "version": 1,
+            "kind": "adjustment",
+            "effective_date": "2026-11-01",
+            "amount_cents": 150000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:extra"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "credit",
+            "record_id": "credit",
+            "version": 1,
+            "kind": "adjustment",
+            "effective_date": "2026-11-01",
+            "amount_cents": -80000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:credit"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "payment-1",
+            "record_id": "payment-1",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 500000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment-1"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "payment-2",
+            "record_id": "payment-2",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment-2"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "invoice",
+            "record_id": "invoice",
+            "version": 1,
+            "kind": "payment_request",
+            "effective_date": "2026-11-01",
+            "amount_cents": 550000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:invoice"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1270000,
+        "net_paid_cents": 800000,
+        "remaining_commitment_cents": 470000,
+        "requested_now_cents": 550000
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-02",
+      "title": "Invoice mentions a deposit already recorded as cash",
+      "input": {
+        "case_id": "FIN-02",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": "invoice",
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-02",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-02/base"
+          },
+          {
+            "id": "source:deposit",
+            "case_id": "FIN-02",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-02/deposit"
+          },
+          {
+            "id": "source:invoice",
+            "case_id": "FIN-02",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-02/invoice"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "deposit",
+            "record_id": "deposit",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:deposit"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "invoice",
+            "record_id": "invoice",
+            "version": 1,
+            "kind": "payment_request",
+            "effective_date": "2026-11-01",
+            "amount_cents": 700000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:invoice"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "mentioned_deposit_cents": 300000
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000,
+        "requested_now_cents": 700000
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-03",
+      "title": "Confirmed replacement includes a previously separate change",
+      "input": {
+        "case_id": "FIN-03",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:estimate-v1",
+            "case_id": "FIN-03",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-03/estimate-v1"
+          },
+          {
+            "id": "source:estimate-v2",
+            "case_id": "FIN-03",
+            "version": 2,
+            "origin": "document",
+            "locator": "synthetic/FIN-03/estimate-v2"
+          },
+          {
+            "id": "source:extra",
+            "case_id": "FIN-03",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-03/extra"
+          },
+          {
+            "id": "source:payment",
+            "case_id": "FIN-03",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-03/payment"
+          },
+          {
+            "id": "source:replacement",
+            "case_id": "FIN-03",
+            "version": 1,
+            "origin": "user_statement",
+            "locator": "synthetic/FIN-03/replacement",
+            "actor_id": "owner-1"
+          },
+          {
+            "id": "source:included-work",
+            "case_id": "FIN-03",
+            "version": 1,
+            "origin": "user_statement",
+            "locator": "synthetic/FIN-03/included-work",
+            "actor_id": "owner-1"
+          }
+        ],
+        "records": [
+          {
+            "id": "estimate-v1",
+            "record_id": "estimate",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1200000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:estimate-v1"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "estimate-v2",
+            "record_id": "estimate",
+            "version": 2,
+            "kind": "agreement",
+            "effective_date": "2026-11-05",
+            "amount_cents": 1350000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:estimate-v2"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "extra",
+            "record_id": "extra",
+            "version": 1,
+            "kind": "adjustment",
+            "effective_date": "2026-11-01",
+            "amount_cents": 150000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:extra"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 800000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          }
+        ],
+        "links": [
+          {
+            "id": "replacement",
+            "kind": "supersedes",
+            "from_id": "estimate-v2",
+            "to_id": "estimate-v1",
+            "review": "accepted",
+            "basis_revision": 1,
+            "evidence_refs": [
+              "source:replacement"
+            ],
+            "actor_id": "owner-1",
+            "reviewed_at": "2026-11-14T10:00:00Z"
+          },
+          {
+            "id": "included-work",
+            "kind": "includes_adjustment",
+            "from_id": "estimate-v2",
+            "to_id": "extra",
+            "review": "accepted",
+            "basis_revision": 1,
+            "evidence_refs": [
+              "source:included-work"
+            ],
+            "actor_id": "owner-1",
+            "reviewed_at": "2026-11-14T10:00:00Z"
+          }
+        ],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1350000,
+        "net_paid_cents": 800000,
+        "remaining_commitment_cents": 550000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-04",
+      "title": "Actual cash refund does not reduce agreement",
+      "input": {
+        "case_id": "FIN-04",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-04",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-04/base"
+          },
+          {
+            "id": "source:payment",
+            "case_id": "FIN-04",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-04/payment"
+          },
+          {
+            "id": "source:refund",
+            "case_id": "FIN-04",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-04/refund"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1100000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "refund",
+            "record_id": "refund",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": -100000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:refund"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 1000000,
+        "remaining_commitment_cents": 0,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-06",
+      "title": "Missing agreement remains unknown",
+      "input": {
+        "case_id": "FIN-06",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": "invoice",
+        "sources": [
+          {
+            "id": "source:payment",
+            "case_id": "FIN-06",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-06/payment"
+          },
+          {
+            "id": "source:invoice",
+            "case_id": "FIN-06",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-06/invoice"
+          }
+        ],
+        "records": [
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 100000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "invoice",
+            "record_id": "invoice",
+            "version": 1,
+            "kind": "payment_request",
+            "effective_date": "2026-11-01",
+            "amount_cents": 550000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:invoice"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": null,
+        "net_paid_cents": 100000,
+        "remaining_commitment_cents": null,
+        "requested_now_cents": 550000
+      },
+      "expected_question_codes": [
+        "MISSING_AGREEMENT"
+      ]
+    },
+    {
+      "id": "FIN-07",
+      "title": "Pending transfer remains excluded",
+      "input": {
+        "case_id": "FIN-07",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-07",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-07/base"
+          },
+          {
+            "id": "source:paid",
+            "case_id": "FIN-07",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-07/paid"
+          },
+          {
+            "id": "source:pending",
+            "case_id": "FIN-07",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-07/pending"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "paid",
+            "record_id": "paid",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:paid"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "pending",
+            "record_id": "pending",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 200000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:pending"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "pending"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-08",
+      "title": "Two source records of one bank operation",
+      "input": {
+        "case_id": "FIN-08",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-08",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-08/base"
+          },
+          {
+            "id": "source:import-a",
+            "case_id": "FIN-08",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-08/import-a"
+          },
+          {
+            "id": "source:import-b",
+            "case_id": "FIN-08",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-08/import-b"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "import-a",
+            "record_id": "import-a",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:import-a"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed",
+            "bank_account_id": "bank-a/account-1",
+            "bank_transaction_id": "tx1"
+          },
+          {
+            "id": "import-b",
+            "record_id": "import-b",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:import-b"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed",
+            "bank_account_id": "bank-a/account-1",
+            "bank_transaction_id": "tx1"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-09",
+      "title": "Two real same-amount transfers retain their identity",
+      "input": {
+        "case_id": "FIN-09",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-09",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-09/base"
+          },
+          {
+            "id": "source:payment-a",
+            "case_id": "FIN-09",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-09/payment-a"
+          },
+          {
+            "id": "source:payment-b",
+            "case_id": "FIN-09",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-09/payment-b"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "payment-a",
+            "record_id": "payment-a",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment-a"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed",
+            "bank_account_id": "bank-a/account-1",
+            "bank_transaction_id": "tx1"
+          },
+          {
+            "id": "payment-b",
+            "record_id": "payment-b",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment-b"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed",
+            "bank_account_id": "bank-a/account-1",
+            "bank_transaction_id": "tx2"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 600000,
+        "remaining_commitment_cents": 400000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "FIN-16",
+      "title": "Unknown recipient cannot reduce this contractor balance",
+      "input": {
+        "case_id": "FIN-16",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "FIN-16",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/FIN-16/base"
+          },
+          {
+            "id": "source:known",
+            "case_id": "FIN-16",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-16/known"
+          },
+          {
+            "id": "source:unknown",
+            "case_id": "FIN-16",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/FIN-16/unknown"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "known",
+            "record_id": "known",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:known"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "unknown",
+            "record_id": "unknown",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 200000,
+            "contractor_id": null,
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:unknown"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": [
+        "UNRESOLVED_RECIPIENT"
+      ]
+    },
+    {
+      "id": "NORM-VERSION-CONFLICT",
+      "title": "Proposed replacement is not a confirmed replacement",
+      "input": {
+        "case_id": "NORM-VERSION-CONFLICT",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:estimate-v1",
+            "case_id": "NORM-VERSION-CONFLICT",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/NORM-VERSION-CONFLICT/estimate-v1"
+          },
+          {
+            "id": "source:estimate-v2",
+            "case_id": "NORM-VERSION-CONFLICT",
+            "version": 2,
+            "origin": "document",
+            "locator": "synthetic/NORM-VERSION-CONFLICT/estimate-v2"
+          },
+          {
+            "id": "source:payment",
+            "case_id": "NORM-VERSION-CONFLICT",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/NORM-VERSION-CONFLICT/payment"
+          },
+          {
+            "id": "source:proposal",
+            "case_id": "NORM-VERSION-CONFLICT",
+            "version": 1,
+            "origin": "user_statement",
+            "locator": "synthetic/NORM-VERSION-CONFLICT/proposal",
+            "actor_id": "owner-1"
+          }
+        ],
+        "records": [
+          {
+            "id": "estimate-v1",
+            "record_id": "estimate",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1200000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:estimate-v1"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "estimate-v2",
+            "record_id": "estimate",
+            "version": 2,
+            "kind": "agreement",
+            "effective_date": "2026-11-05",
+            "amount_cents": 1350000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:estimate-v2"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "payment",
+            "record_id": "payment",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 800000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:payment"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          }
+        ],
+        "links": [
+          {
+            "id": "proposal",
+            "kind": "supersedes",
+            "from_id": "estimate-v2",
+            "to_id": "estimate-v1",
+            "review": "proposed",
+            "basis_revision": 1,
+            "evidence_refs": [
+              "source:proposal"
+            ],
+            "actor_id": null,
+            "reviewed_at": null
+          }
+        ],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": null,
+        "net_paid_cents": 800000,
+        "remaining_commitment_cents": null,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": [
+        "AGREEMENT_VERSION_CONFLICT",
+        "MISSING_AGREEMENT"
+      ]
+    },
+    {
+      "id": "NORM-TRANSACTION-CONFLICT",
+      "title": "Bank identity matches but amounts disagree",
+      "input": {
+        "case_id": "NORM-TRANSACTION-CONFLICT",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "NORM-TRANSACTION-CONFLICT",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/NORM-TRANSACTION-CONFLICT/base"
+          },
+          {
+            "id": "source:import-a",
+            "case_id": "NORM-TRANSACTION-CONFLICT",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/NORM-TRANSACTION-CONFLICT/import-a"
+          },
+          {
+            "id": "source:import-b",
+            "case_id": "NORM-TRANSACTION-CONFLICT",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/NORM-TRANSACTION-CONFLICT/import-b"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "import-a",
+            "record_id": "import-a",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 300000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:import-a"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed",
+            "bank_account_id": "account-1",
+            "bank_transaction_id": "tx1"
+          },
+          {
+            "id": "import-b",
+            "record_id": "import-b",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 200000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:import-b"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed",
+            "bank_account_id": "account-1",
+            "bank_transaction_id": "tx1"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 0,
+        "remaining_commitment_cents": 1000000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": [
+        "TRANSACTION_CONFLICT"
+      ]
+    },
+    {
+      "id": "NORM-CUTOFF",
+      "title": "Boundary date is inclusive, later payment is excluded",
+      "input": {
+        "case_id": "NORM-CUTOFF",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "NORM-CUTOFF",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/NORM-CUTOFF/base"
+          },
+          {
+            "id": "source:today",
+            "case_id": "NORM-CUTOFF",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/NORM-CUTOFF/today"
+          },
+          {
+            "id": "source:tomorrow",
+            "case_id": "NORM-CUTOFF",
+            "version": 1,
+            "origin": "bank_record",
+            "locator": "synthetic/NORM-CUTOFF/tomorrow"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "today",
+            "record_id": "today",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-14",
+            "amount_cents": 100000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:today"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          },
+          {
+            "id": "tomorrow",
+            "record_id": "tomorrow",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-15",
+            "amount_cents": 200000,
+            "contractor_id": "contractor-1",
+            "origin": "bank_record",
+            "evidence_refs": [
+              "source:tomorrow"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 100000,
+        "remaining_commitment_cents": 900000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": []
+    },
+    {
+      "id": "NORM-MANUAL",
+      "title": "Manual completion claim keeps user_statement origin",
+      "input": {
+        "case_id": "NORM-MANUAL",
+        "case_revision": 1,
+        "contractor_id": "contractor-1",
+        "cutoff_date": "2026-11-14",
+        "current_request_id": null,
+        "sources": [
+          {
+            "id": "source:base",
+            "case_id": "NORM-MANUAL",
+            "version": 1,
+            "origin": "document",
+            "locator": "synthetic/NORM-MANUAL/base"
+          },
+          {
+            "id": "source:manual",
+            "case_id": "NORM-MANUAL",
+            "version": 1,
+            "origin": "user_statement",
+            "locator": "synthetic/NORM-MANUAL/manual"
+          }
+        ],
+        "records": [
+          {
+            "id": "base",
+            "record_id": "base",
+            "version": 1,
+            "kind": "agreement",
+            "effective_date": "2026-11-01",
+            "amount_cents": 1000000,
+            "contractor_id": "contractor-1",
+            "origin": "document",
+            "evidence_refs": [
+              "source:base"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            }
+          },
+          {
+            "id": "manual",
+            "record_id": "manual",
+            "version": 1,
+            "kind": "cash",
+            "effective_date": "2026-11-01",
+            "amount_cents": 100000,
+            "contractor_id": "contractor-1",
+            "origin": "user_statement",
+            "evidence_refs": [
+              "source:manual"
+            ],
+            "review": {
+              "extraction_review": "unreviewed",
+              "semantic_review": "reviewed_for_calculation",
+              "semantic_actor_id": "reviewer-1",
+              "semantic_reviewed_at": "2026-11-14T10:00:00Z",
+              "lifecycle": "active"
+            },
+            "state": "completed"
+          }
+        ],
+        "links": [],
+        "decisions": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 100000,
+        "remaining_commitment_cents": 900000,
+        "requested_now_cents": null
+      },
+      "expected_question_codes": []
+    }
+  ]
+}

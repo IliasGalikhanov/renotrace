@@ -39,7 +39,7 @@ jobs:
       - name: Python static types
         run: uv run --locked mypy
       - name: Ledger, API and CLI tests
-        run: uv run --locked pytest --cov=app.ledger --cov-report=term-missing
+        run: uv run --locked pytest --cov=app.ledger --cov=app.normalization --cov-report=term-missing
       - name: Production web build
         run: npm run build
       - name: TypeScript

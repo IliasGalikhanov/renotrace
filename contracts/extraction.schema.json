@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:renoledger:extraction:0.1",
+  "title": "RenoLedger extraction candidates",
+  "description": "Untrusted extraction proposals. No accepted financial facts or legal verification. Raw monetary strings preserve source notation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "document_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "unknown",
+        "unsupported"
+      ]
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD",
+        "unknown",
+        "unsupported"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "page": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "csv_row": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "quote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bbox": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "page",
+          "csv_row",
+          "quote",
+          "bbox"
+        ]
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "agreement_base",
+              "commitment_adjustment",
+              "billing_entry",
+              "payment_request",
+              "cash_event",
+              "payment_terms",
+              "owner_purchase"
+            ]
+          },
+          "billing_basis": {
+            "type": "string",
+            "enum": [
+              "incremental_charge",
+              "cumulative_valuation",
+              "balance_statement",
+              "credit_note",
+              "unknown",
+              "not_applicable"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "field_name": {
+                  "type": "string",
+                  "enum": [
+                    "amount",
+                    "gross_total",
+                    "previous_billed",
+                    "previous_paid",
+                    "requested_now",
+                    "tax",
+                    "discount",
+                    "due_date",
+                    "effective_date",
+                    "invoice_number",
+                    "contractor_name",
+                    "condition_text",
+                    "stage_amount"
+                  ]
+                },
+                "value_text": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "field_name",
+                "value_text",
+                "evidence_ids"
+              ]
+            }
+          },
+          "ambiguities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "billing_basis",
+          "fields",
+          "ambiguities"
+        ]
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "document_version_id",
+    "language",
+    "currency",
+    "evidence",
+    "candidates",
+    "warnings"
+  ]
+}

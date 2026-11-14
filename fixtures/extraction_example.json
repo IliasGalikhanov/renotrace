@@ -1,0 +1,44 @@
+{
+  "schema_version": "0.1",
+  "document_version_id": "00000000-0000-4000-8000-000000000001",
+  "language": "en",
+  "currency": "USD",
+  "evidence": [
+    {
+      "id": "ev1",
+      "page": 1,
+      "csv_row": null,
+      "quote": "Balance due $5,500. Previous deposit $8,000.",
+      "bbox": null
+    }
+  ],
+  "candidates": [
+    {
+      "id": "cand1",
+      "kind": "payment_request",
+      "billing_basis": "balance_statement",
+      "fields": [
+        {
+          "field_name": "requested_now",
+          "value_text": "$5,500",
+          "evidence_ids": [
+            "ev1"
+          ]
+        },
+        {
+          "field_name": "previous_paid",
+          "value_text": "$8,000",
+          "evidence_ids": [
+            "ev1"
+          ]
+        }
+      ],
+      "ambiguities": [
+        "Deposit is mentioned in the document; completed payment is not independently established."
+      ]
+    }
+  ],
+  "warnings": [
+    "Synthetic fixture."
+  ]
+}

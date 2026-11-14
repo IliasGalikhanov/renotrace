@@ -1,0 +1,424 @@
+{
+  "version": "0.1",
+  "currency": "USD",
+  "notice": "Synthetic normalized reference cases, not real customer data. Expected normalization is supplied; arithmetic checks do not validate OCR or application behavior.",
+  "cases": [
+    {
+      "id": "FIN-01",
+      "title": "Agreement change and material credit",
+      "synthetic": true,
+      "source_story": "Base 12000, extra work 1500, approved reduction 800, completed payments 8000; request 5500.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1200000,
+          150000,
+          -80000
+        ],
+        "completed_cash_cents": [
+          500000,
+          300000
+        ],
+        "requested_now_cents": 550000,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1270000,
+        "net_paid_cents": 800000,
+        "remaining_commitment_cents": 470000
+      },
+      "expected_issue_codes": [
+        "REQUEST_DIFFERS_FROM_RECORDED_REMAINDER"
+      ]
+    },
+    {
+      "id": "FIN-02",
+      "title": "Net request already deducts deposit",
+      "synthetic": true,
+      "source_story": "Total 10000; deposit 3000 completed; invoice balance due 7000. Do not deduct deposit from balance again.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          300000
+        ],
+        "requested_now_cents": 700000,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-03",
+      "title": "Revised estimate incorporates prior change",
+      "synthetic": true,
+      "source_story": "Old base 12000 and change 1500 replaced by inclusive 13500 estimate.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1350000
+        ],
+        "completed_cash_cents": [
+          800000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": [
+          "superseded_base_12000",
+          "change_1500_already_included"
+        ]
+      },
+      "expected": {
+        "commitment_total_cents": 1350000,
+        "net_paid_cents": 800000,
+        "remaining_commitment_cents": 550000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-04",
+      "title": "Refund of overpayment",
+      "synthetic": true,
+      "source_story": "Agreement 10000; paid 11000; received refund 1000.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          1100000,
+          -100000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 1000000,
+        "remaining_commitment_cents": 0
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-05",
+      "title": "Stage request differs from contract remainder",
+      "synthetic": true,
+      "source_story": "Contract 20000; paid 12000; current stage requests 3000; later completion 5000.",
+      "normalized": {
+        "commitment_terms_cents": [
+          2000000
+        ],
+        "completed_cash_cents": [
+          1200000
+        ],
+        "requested_now_cents": 300000,
+        "documented_stage_cents": 300000,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 2000000,
+        "net_paid_cents": 1200000,
+        "remaining_commitment_cents": 800000
+      },
+      "expected_issue_codes": [
+        "STAGE_COMPLETION_NOT_OBSERVED"
+      ]
+    },
+    {
+      "id": "FIN-06",
+      "title": "Unknown agreement baseline",
+      "synthetic": true,
+      "source_story": "Invoice 5500 and payment 1000 exist, accepted baseline missing.",
+      "normalized": {
+        "commitment_terms_cents": null,
+        "completed_cash_cents": [
+          100000
+        ],
+        "requested_now_cents": 550000,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": null,
+        "net_paid_cents": 100000,
+        "remaining_commitment_cents": null
+      },
+      "expected_issue_codes": [
+        "MISSING_AGREEMENT"
+      ]
+    },
+    {
+      "id": "FIN-07",
+      "title": "Pending payment excluded",
+      "synthetic": true,
+      "source_story": "Contract 10000, completed 3000 and pending 2000.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          300000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": [
+          "pending_transfer_2000"
+        ]
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-08",
+      "title": "Overlapping CSV known transaction",
+      "synthetic": true,
+      "source_story": "Two CSV files contain the same bank transaction tx_1 of 3000.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          300000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": [
+          "duplicate_tx_1_second_import"
+        ]
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-09",
+      "title": "Two genuine equal payments",
+      "synthetic": true,
+      "source_story": "Two separate completed transactions tx_1 and tx_2 each 3000.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          300000,
+          300000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 600000,
+        "remaining_commitment_cents": 400000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-10",
+      "title": "Lender and owner payments",
+      "synthetic": true,
+      "source_story": "Owner paid 3000, lender paid contractor 2000; both have supporting records.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          300000,
+          200000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 500000,
+        "remaining_commitment_cents": 500000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-11",
+      "title": "Cumulative billing not previous paid",
+      "synthetic": true,
+      "source_story": "Previously billed 5000, paid 3000; new cumulative billed 13500, balance request 10500; incremental billing is 8500.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1350000
+        ],
+        "completed_cash_cents": [
+          300000
+        ],
+        "requested_now_cents": 1050000,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [
+          500000,
+          850000
+        ],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1350000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 1050000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-12",
+      "title": "Credit is not cash",
+      "synthetic": true,
+      "source_story": "Agreement 10000, approved scope reduction 1000, paid 5000, no cash refund.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000,
+          -100000
+        ],
+        "completed_cash_cents": [
+          500000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 900000,
+        "net_paid_cents": 500000,
+        "remaining_commitment_cents": 400000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-13",
+      "title": "Payment assigned to contractor but not invoice",
+      "synthetic": true,
+      "source_story": "Agreement 10000, completed deposit 2000 belongs to contractor; no invoice allocation.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          200000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 200000,
+        "remaining_commitment_cents": 800000
+      },
+      "expected_issue_codes": [
+        "UNALLOCATED_ADVANCE"
+      ]
+    },
+    {
+      "id": "FIN-14",
+      "title": "Negative remainder retained",
+      "synthetic": true,
+      "source_story": "Agreement 10000, payments 11000, no refund yet.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          1100000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": []
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 1100000,
+        "remaining_commitment_cents": -100000
+      },
+      "expected_issue_codes": [
+        "RECORDED_CREDIT_BALANCE"
+      ]
+    },
+    {
+      "id": "FIN-15",
+      "title": "Mixed personal purchase and contractor credit",
+      "synthetic": true,
+      "source_story": "Owner receipt 1000 contains project materials 800 and personal items 200; contractor explicitly grants 800 reduction. Owner purchase is not payment to contractor.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000,
+          -80000
+        ],
+        "completed_cash_cents": [
+          500000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": [
+          "personal_goods_200",
+          "owner_purchase_as_contractor_payment"
+        ]
+      },
+      "expected": {
+        "commitment_total_cents": 920000,
+        "net_paid_cents": 500000,
+        "remaining_commitment_cents": 420000
+      },
+      "expected_issue_codes": []
+    },
+    {
+      "id": "FIN-16",
+      "title": "Unknown recipient excluded from contractor payments",
+      "synthetic": true,
+      "source_story": "Agreement 10000; completed 3000 confirmed contractor payment; another 2000 transfer has unknown recipient.",
+      "normalized": {
+        "commitment_terms_cents": [
+          1000000
+        ],
+        "completed_cash_cents": [
+          300000
+        ],
+        "requested_now_cents": null,
+        "documented_stage_cents": null,
+        "billing_entries_cents": [],
+        "excluded_events": [
+          "unknown_recipient_transfer_2000"
+        ]
+      },
+      "expected": {
+        "commitment_total_cents": 1000000,
+        "net_paid_cents": 300000,
+        "remaining_commitment_cents": 700000
+      },
+      "expected_issue_codes": [
+        "UNRESOLVED_RECIPIENT"
+      ]
+    }
+  ]
+}

@@ -4,7 +4,13 @@ See [stage 7 report](STAGE_7_REPORT.md) for the latest release gate. Stage 5 bel
 
 ## Stage 7 migration and release
 
-No new service, environment variable or paid resource is needed. The existing migration automatically adds four project-owned tables and the immutable-snapshot trigger under an advisory lock. Existing projects, sources and audit entries are retained. Old audit rows are not backfilled into full snapshots. Linux integration tests apply the migration again to a populated project, restart the API and verify frozen history and cascade deletion/expiry.
+No new service, environment variable or paid resource is needed. **Before deploying the stage 7 backend**, explicitly run the existing migration command from the checked checkout:
+
+```powershell
+.\scripts\uv.ps1 run --locked --env-file .env.guest.local python -m app.guest.manage migrate
+```
+
+API startup intentionally does not run migrations. This command adds four project-owned tables and the immutable-snapshot trigger under an advisory lock. Existing projects, sources and audit entries are retained. Old audit rows are not backfilled into full snapshots. Linux integration tests apply the migration again to a populated project, restart the API and verify frozen history and cascade deletion/expiry.
 
 After both CI jobs pass for the release SHA, manually deploy that SHA to **Render first**, then Vercel, using the existing procedure below. The old frontend works with the additive backend response; the new frontend requires the stage 7 backend. Keep auto-deploy disabled. Run local integration and browser suites serially: the integration suite deliberately restarts the API.
 

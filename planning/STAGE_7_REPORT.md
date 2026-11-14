@@ -61,4 +61,14 @@ Render Free can sleep and OCR can be slow. No keepalive or paid resources are in
 
 ## Release gate
 
-Pending final browser checks, exact-SHA CI and manual release. Before this release, both public services run `fa3f23a37399098de978b7de84e81d55a81238e9`; backend deployment `dep-dbsb84rrjlhs73dncs8g`, frontend deployment `dpl_CVXsoVFPGaSYxQ9gvEExoFqSikfQ`. The additive rollback procedure is in [DEPLOYMENT.md](DEPLOYMENT.md#stage-7-migration-and-release).
+Implementation commit: `aa1747967b26f6e0c1cf726af00fc000ffa7acb5`. Signed-cent clarification fix and final release candidate: `6cb667c5308a9cee98b722f7b3956dcd8ffd58dc`.
+
+Both Linux and Windows jobs passed for [implementation CI](https://github.com/IliasGalikhanov/renotrace/actions/runs/43636802919) and [final release CI](https://github.com/IliasGalikhanov/renotrace/actions/runs/43637607936), including all PostgreSQL/OCR/restart and browser checks.
+
+The first public backend preflight returned HTTP 500 because the explicit stage 7 schema migration had not yet run. API startup intentionally does not migrate. Applied `python -m app.guest.manage migrate` to the existing Supabase project, preserved existing data, and corrected the runbook to require migration **before** the backend release. Repeated public HTTP test passed in 155.88 seconds: real uploads, text replies/edits, concurrent retries, owner decisions, recalculation, frozen historical reads and test-project deletion. This preflight ran on the implementation backend before the signed-text-only fix.
+
+Public regression on 2026-11-15: **12 remote demo browser tests passed** in 43.1 seconds at 360/768/1440 px, including FIN-01/11/16, source disclosure, reset and independent visitors. Backend `/healthz` returned `ok`; OpenAPI reports `0.7.0` and both snapshot routes. These checks do not establish the final runtime SHA or verify the new frontend journey.
+
+Public frontend release and final history-browser verification remain pending. The built-in browser tool became unavailable during release (`Trusted RPC service is not configured: browser`; its advertised skill file is missing). Render deployment of `6cb667c` had been submitted, but its final status was not observed. Vercel's Production form was prepared for that same SHA but not submitted. The user was asked to complete the prepared deployment and confirm Render Live / Vercel Ready. Current stage 7 screenshots are from local acceptance, not public acceptance.
+
+Before stage 7, both public services ran `fa3f23a37399098de978b7de84e81d55a81238e9`; backend deployment `dep-dbsb84rrjlhs73dncs8g`, frontend deployment `dpl_CVXsoVFPGaSYxQ9gvEExoFqSikfQ`. The additive rollback procedure is in [DEPLOYMENT.md](DEPLOYMENT.md#stage-7-migration-and-release).

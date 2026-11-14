@@ -1,6 +1,6 @@
 # Stage 8: explicit invoice rechecks and frozen comparisons
 
-API `0.8.0`, calculation snapshot contract `guest-review/3`, comparison algorithm `invoice-comparison/1`. Extends [guest reviews](GUEST_REVIEW_CONTRACT.md) and [casework](CASEWORK_CONTRACT.md). USD, original 24-hour guest lifetime, same owner checks/private originals and OCR. No outgoing messages, paid package, export or extended access.
+API `0.8.0`, calculation snapshot contract `guest-review/3`, comparison algorithm `invoice-comparison/1`. Extends [guest reviews](GUEST_REVIEW_CONTRACT.md) and [casework](CASEWORK_CONTRACT.md). USD, original 24-hour guest lifetime, same owner checks/private originals and OCR. No outgoing messages, paid package or extended access. Stage 9 adds version-consistent PDFs through the separate [export contract](PDF_EXPORT_CONTRACT.md); financial and comparison semantics stay unchanged.
 
 ## Workflow and actual API
 

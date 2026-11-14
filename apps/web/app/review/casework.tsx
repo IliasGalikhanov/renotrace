@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import PdfDownload from "./pdf-download";
 import type { Result, State } from "./review";
 
 type Evidence =
@@ -522,6 +523,15 @@ export default function Casework({
           aria-label="Historical calculation"
         >
           <h3>Historical snapshot — read only</h3>
+          <PdfDownload
+            key={snapshot.summary.id}
+            projectId={state.project.id}
+            kind="snapshot"
+            resultId={snapshot.summary.id}
+            savedAt={snapshot.summary.created_at}
+            version={`${snapshot.summary.contract_version} / revision ${snapshot.summary.financial_revision}`}
+            disabled={disabled}
+          />
           <p>
             {snapshot.summary.contract_version} · revision{" "}
             {snapshot.summary.financial_revision} ·{" "}

@@ -4,7 +4,7 @@
 
 RenoTrace traces a renovation invoice back to recorded terms, changes, and payments. The requested amount, calculated remainder, payment conditions, and unresolved questions are separate concepts.
 
-## Current status: stage 8
+## Current status: stage 9
 
 The primary path is **Review my invoice**: upload your own invoice, estimate and payment evidence without an account; check extracted candidates and relationships; calculate using the real Python normalization → ledger. A Secure HttpOnly guest cookie authorizes a private project for 24 hours. PostgreSQL persists review state, audit and durable jobs; original files live in private object storage. Text PDFs are parsed by page; scanned PDFs and PNG/JPEG use real local Tesseract OCR. English labelled USD documents require explicit user review.
 
@@ -14,9 +14,11 @@ Guest reviews now retain stable question cards, owner-reported contractor replie
 
 **Recheck with new information** starts from a selected saved calculation. Review labelled invoice positions or add missed positions with page citations, collect exact reply versions, explicitly confirm a corrected request or identify a separate invoice, and save/run a recheck. Frozen comparisons show changed composition, discounts, reflected payments, conditions and unmatched rows, separately from C/P/R changes. A checked invoice credit can cite an already recorded canonical payment without counting it twice. Lower totals do not establish savings or automatically resolve questions. Existing sources and an explanation alone can be rechecked without a new PDF. See the [stage 8 contract](planning/RECHECK_CONTRACT.md) and [stage 8 report](planning/STAGE_8_REPORT.md) for recognition limits, tests and deployment status.
 
+Stage 9 adds **Download calculation PDF** and **Download recheck PDF** inside selected saved results. Reports use immutable snapshots and pinned reply versions, include source excerpts/checksums and separate evidence/owner decisions, and never rerun the financial algorithms. The backend generates real PDFs in memory; one-use tickets download directly without the Vercel binary limit. Downloaded copies remain after the 24-hour guest access ends. See the [PDF contract](planning/PDF_EXPORT_CONTRACT.md), [stage 9 report](planning/STAGE_9_REPORT.md) and [fictional example](output/pdf/renotrace-fictional-comparison.pdf).
+
 Implemented: an interactive English synthetic demo, a restricted public FastAPI demo API, a server-side Next.js BFF, a pure Python ledger, and a pure structured-history normalization module. Normalization selects confirmed estimate versions, removes included changes, filters payments/refunds, reconciles bank identities, applies explicit user decisions, and returns unresolved questions and provenance. Stage 3 adds typed billing, comparable cumulative valuations, targeted credit notes, explicit partial payment/refund allocations, invoice balances and unallocated cash. Both domain modules run without a browser, AI, database, or network. The demo calls them on the server for every recalculation; browser code only formats returned amounts.
 
-Not implemented: account registration, general-purpose LLM document understanding, automatic inferred document matching, exports or checkout. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The synthetic demo never saves visitor decisions. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
+Not implemented: account registration, general-purpose LLM document understanding, automatic inferred document matching, demo-mode PDF export or checkout. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The synthetic demo never saves visitor decisions. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
 
 ## Try the interactive demo
 

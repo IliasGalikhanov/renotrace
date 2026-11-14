@@ -654,6 +654,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pypdf" },
     { name = "pypdfium2" },
+    { name = "reportlab" },
     { name = "uvicorn" },
 ]
 
@@ -664,7 +665,6 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "reportlab" },
     { name = "ruff" },
 ]
 
@@ -678,6 +678,7 @@ requires-dist = [
     { name = "pydantic", specifier = "==2.14.3" },
     { name = "pypdf", specifier = "==7.1.0" },
     { name = "pypdfium2", specifier = "==5.15.2" },
+    { name = "reportlab", specifier = "==5.1.0" },
     { name = "uvicorn", specifier = "==0.54.0" },
 ]
 
@@ -688,7 +689,6 @@ dev = [
     { name = "mypy", specifier = "==2.4.1" },
     { name = "pytest", specifier = "==9.2.0" },
     { name = "pytest-cov", specifier = "==7.1.0" },
-    { name = "reportlab", specifier = "==5.1.0" },
     { name = "ruff", specifier = "==0.17.5" },
 ]
 

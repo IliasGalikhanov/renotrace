@@ -17,6 +17,7 @@ from .casework_models import (
     Snapshot,
     SnapshotSummary,
 )
+from .export_store import ExportRequest, Exports
 from .extraction import MAX_BYTES
 from .models import Document, ReviewCommand, Session, Ticket, TicketRequest
 from .recheck_models import Comparison, RunRecheck, SavePackage, StartRecheck
@@ -129,6 +130,37 @@ def comparison(project_id: str, comparison_id: str, reviews: Service, secret: Se
 @router.post("/projects/{project_id}/tickets", response_model=Ticket)
 def ticket(project_id: str, command: TicketRequest, reviews: Service, secret: Secret) -> Ticket:
     return reviews.ticket(project_id, secret, command)
+
+
+@router.post("/projects/{project_id}/exports", response_model=Ticket)
+def export_ticket(
+    project_id: str, command: ExportRequest, reviews: Service, secret: Secret
+) -> Ticket:
+    """Authorize an immutable snapshot/comparison PDF; not a draft or current form."""
+    return Exports(reviews.db).ticket(project_id, secret, command)
+
+
+@router.get(
+    "/export",
+    response_class=Response,
+    responses={
+        200: {"content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}}}
+    },
+)
+def export_download(reviews: Service, secret: Secret) -> Response:
+    """Direct binary download using a single-use PDF-only Authorization ticket (never a URL)."""
+    content, name = Exports(reviews.db).download(reviews.consume(secret, "pdf"))
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Disposition": f'attachment; filename="{name}"',
+            "Content-Security-Policy": "sandbox",
+            "Referrer-Policy": "no-referrer",
+        },
+    )
 
 
 @router.delete("/projects/{project_id}", status_code=204)

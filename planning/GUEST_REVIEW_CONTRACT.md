@@ -55,3 +55,7 @@ Parser subprocess: 20 seconds for validation; 70 seconds/page, including Tessera
 ## Verification boundaries
 
 Unit tests parse real fictional PDF bytes and call the real domain. Container integration tests use real PostgreSQL, private SeaweedFS S3 and Tesseract for PDF text/scans/PNG/JPEG. A separate connection probe exercises actual Supabase PostgreSQL/Storage, denies public reads, and deletes its fictional source. Playwright uploads documents through the cookie BFF and transfer tickets, checks $7,000, changes payment membership, reloads, isolates a second visitor, previews an original and deletes the review. Remote mode uses an explicit public URL and never launches local servers. Fault-injection tests do not count as proof of OCR/provider connectivity.
+
+## Stage 9 saved PDF extension
+
+[PDF export](PDF_EXPORT_CONTRACT.md) adds owner-authorized tickets and direct in-memory PDF downloads of selected immutable snapshots/comparisons. No financial recalculation, current-discussion blending, retention extension, schema migration or persisted export objects. Actual routes are exported from FastAPI `0.9.0`.

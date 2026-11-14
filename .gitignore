@@ -11,6 +11,7 @@
 .tools/
 .runtime/
 .cache/
+tmp/
 .npm-cache/
 build/
 

@@ -24,6 +24,8 @@ tests
 services/backend/tests
 playwright-report
 test-results
+tmp
+output
 uploads
 data
 backups

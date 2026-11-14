@@ -203,6 +203,8 @@ def test_actual_openapi_is_exported_and_only_claims_implemented_routes(client):
         "/api/guest/projects/{project_id}/rechecks/{draft_id}/run",
         "/api/guest/projects/{project_id}/comparisons/{comparison_id}",
         "/api/guest/projects/{project_id}/tickets",
+        "/api/guest/projects/{project_id}/exports",
+        "/api/guest/export",
         "/api/guest/transfer",
         "/api/guest/maintenance/cleanup",
     }

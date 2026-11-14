@@ -22,9 +22,14 @@ async function proxy(
     (project &&
       ((path.length === 2 && ["GET", "DELETE"].includes(request.method)) ||
         (path.length === 3 &&
-          ["review", "tickets", "replies", "attachments", "rechecks"].includes(
-            path[2],
-          ) &&
+          [
+            "review",
+            "tickets",
+            "exports",
+            "replies",
+            "attachments",
+            "rechecks",
+          ].includes(path[2]) &&
           request.method === "POST") ||
         (path[2] === "snapshots" &&
           request.method === "GET" &&
@@ -145,11 +150,11 @@ async function proxy(
       });
       return response;
     }
-    if (path[2] === "tickets")
+    if (["tickets", "exports"].includes(path[2]))
       return NextResponse.json(
         {
           ...data,
-          transfer_url: `${backend.replace(/\/$/, "")}/api/guest/transfer`,
+          transfer_url: `${backend.replace(/\/$/, "")}/api/guest/${path[2] === "exports" ? "export" : "transfer"}`,
         },
         { headers },
       );

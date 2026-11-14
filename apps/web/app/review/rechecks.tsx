@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import PdfDownload from "./pdf-download";
 import type { Command, Result, State } from "./review";
 import {
   type CheckedLine,
@@ -632,6 +633,15 @@ export default function Rechecks({
           aria-label="Saved invoice comparison"
         >
           <h3>Saved invoice comparison — read only</h3>
+          <PdfDownload
+            key={comparison.id}
+            projectId={state.project.id}
+            kind="comparison"
+            resultId={comparison.id}
+            savedAt={comparison.created_at}
+            version={comparison.algorithm}
+            disabled={disabled}
+          />
           <details>
             <summary>Calculation references</summary>
             <p>

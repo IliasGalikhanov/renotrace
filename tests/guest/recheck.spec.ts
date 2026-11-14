@@ -1,6 +1,35 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+
+async function downloadPdf(page: Page, name: string, output: string) {
+  const downloaded = page.waitForEvent("download", { timeout: 120_000 });
+  await page.getByRole("button", { name, exact: true }).click();
+  const file = await downloaded;
+  expect(file.suggestedFilename()).toMatch(
+    /^renotrace-(snapshot|comparison)-[a-f0-9-]+\.pdf$/,
+  );
+  await file.saveAs(output);
+  const python = path.resolve(
+    process.platform === "win32"
+      ? ".venv/Scripts/python.exe"
+      : ".venv/bin/python",
+  );
+  const inspected = spawnSync(python, ["tools/inspect_guest_pdf.py", output], {
+    encoding: "utf8",
+  });
+  expect(inspected.status, inspected.stderr).toBe(0);
+  const report = JSON.parse(inspected.stdout) as {
+    pages: number;
+    text: string;
+  };
+  expect(report.pages).toBeGreaterThan(1);
+  expect(report.text).toContain("FICTIONAL EXAMPLE");
+  expect(report.text).toContain("Source register");
+  expect(report.text).toContain("PRELIMINARY");
+  return report.text.replace(/PDF generated: .*? UTC/, "PDF generated: [time]");
+}
 
 test.use({ actionTimeout: 20_000 });
 
@@ -23,7 +52,7 @@ async function checkComposition(page: Page) {
     .check();
 }
 
-test("recheck corrected invoice preserves payment and frozen comparison history", async ({
+test("recheck corrected invoice preserves payment and frozen comparison history with PDF downloads", async ({
   page,
 }, info) => {
   await page.goto("/review");
@@ -59,6 +88,44 @@ test("recheck corrected invoice preserves payment and frozen comparison history"
       .click();
     await expect(page.getByTestId("guest-requested")).toHaveText("$6,200.00");
     await expect(page.getByTestId("guest-remaining")).toHaveText("$5,000.00");
+    await page
+      .getByRole("button", { name: /View calculation · revision/ })
+      .first()
+      .click();
+    await expect(
+      page.getByText(/Your downloaded copy remains on your device/),
+    ).toBeVisible();
+    await page.route(
+      "**/api/guest/projects/*/exports",
+      async (route) => {
+        await route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({
+            detail: "Temporary export failure for retry check",
+          }),
+        });
+      },
+      { times: 1 },
+    );
+    await page
+      .getByRole("button", { name: "Download calculation PDF", exact: true })
+      .click();
+    await expect(
+      page
+        .getByRole("region", { name: "Download selected saved report" })
+        .getByRole("alert"),
+    ).toContainText("Temporary export failure");
+    const initialPdf = await downloadPdf(
+      page,
+      "Download calculation PDF",
+      info.outputPath("initial.pdf"),
+    );
+    expect(initialPdf).toContain("$6,200.00");
+    expect(initialPdf).not.toContain("earlier $1,200 transfer");
+    await page
+      .getByRole("button", { name: "Close historical snapshot" })
+      .click();
     const card = page.locator('[data-question-code="REQUEST_RECONCILIATION"]');
     await card.locator(":scope > summary").click();
     await card.getByRole("checkbox", { name: /Include this question/ }).check();
@@ -142,7 +209,7 @@ test("recheck corrected invoice preserves payment and frozen comparison history"
     await page
       .getByRole("button", { name: "Run recheck and save comparison" })
       .click();
-    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.locator('.guest-error[role="alert"]')).toBeVisible();
     await page
       .getByRole("button", { name: "Run recheck and save comparison" })
       .click();
@@ -170,6 +237,30 @@ test("recheck corrected invoice preserves payment and frozen comparison history"
     await expect(comparison).toContainText(
       "Preliminary — unresolved evidence remains.",
     );
+    const comparedPdf = await downloadPdf(
+      page,
+      "Download recheck PDF",
+      info.outputPath("comparison.pdf"),
+    );
+    expect(comparedPdf).toContain("$6,200.00");
+    expect(comparedPdf).toContain("$5,000.00");
+    expect(comparedPdf).toContain("-$1,200.00");
+    expect(comparedPdf).toContain("No additional payment is created.");
+    expect(comparedPdf).toContain("earlier $1,200 transfer");
+    // Re-export the old selection after the new reply, documents and calculation.
+    await page
+      .getByRole("button", { name: /View calculation · revision/ })
+      .last()
+      .click();
+    const historicalPdf = await downloadPdf(
+      page,
+      "Download calculation PDF",
+      info.outputPath("historical.pdf"),
+    );
+    expect(historicalPdf).toBe(initialPdf);
+    await page
+      .getByRole("button", { name: "Close historical snapshot" })
+      .click();
     await comparison.evaluate((el) =>
       el.scrollIntoView({ block: "start", behavior: "instant" }),
     );
@@ -178,10 +269,17 @@ test("recheck corrected invoice preserves payment and frozen comparison history"
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    await fs.mkdir("planning/screenshots/stage8", { recursive: true });
+    await fs.mkdir("planning/screenshots/stage9", { recursive: true });
     await page.screenshot({
-      path: `planning/screenshots/stage8/comparison-${info.project.name}.png`,
+      path: `planning/screenshots/stage9/pdf-download-${info.project.name}.png`,
     });
+    if (process.env.RENOTRACE_BASE_URL && info.project.name === "guest-1440") {
+      await fs.mkdir("output/pdf", { recursive: true });
+      await fs.copyFile(
+        info.outputPath("comparison.pdf"),
+        "output/pdf/renotrace-fictional-public-recheck.pdf",
+      );
+    }
   } finally {
     await page.getByRole("button", { name: "Delete my review" }).click();
     await expect(

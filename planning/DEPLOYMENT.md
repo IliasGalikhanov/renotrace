@@ -1,6 +1,14 @@
 # Deploying RenoTrace
 
-See [stage 8 report](STAGE_8_REPORT.md) for the latest release gate. Stage 5 below is the prior stateless release; stage 6 adds private expiring guest reviews, PostgreSQL, object storage and real OCR. Stages 7/8 reuse these resources for question history, immutable calculations and invoice comparisons. Account registration is not required.
+See [stage 9 report](STAGE_9_REPORT.md) for the latest release gate. Stage 5 below is the prior stateless release; stage 6 adds private expiring guest reviews, PostgreSQL, object storage and real OCR. Stages 7/8 reuse these resources for question history, immutable calculations and invoice comparisons. Account registration is not required.
+
+## Stage 9 PDF release
+
+No schema migration is needed: the existing project-owned single-use tickets table also carries PDF-only tickets. No new secret, service or paid resource is needed. The locked production dependencies now include ReportLab; the backend package includes the font/license. Keep existing `BACKEND_URL`, `FRONTEND_ORIGIN`, host/port and health checks. PDF binary responses go directly from FastAPI to the browser; the Vercel BFF handles only the small owner-authorized ticket response.
+
+After CI passes, deploy the exact checked SHA to Render first. Verify `/healthz`, OpenAPI `0.9.0`, `POST /api/guest/projects/{project_id}/exports` and `GET /api/guest/export`; then deploy the same SHA to Vercel using existing production variables. Keep auto-deploy disabled. Run the public guest flow with real downloads at all three widths and the existing demo regression, using the commands in the [stage 9 report](STAGE_9_REPORT.md#reproduce-checks). Inspect the downloaded PDF contents and rendered pages, not only HTTP status. Do not set `GUEST_LOCAL_DB` for remote testing.
+
+Rollback frontend first, then backend to the prior stage 8 SHA `3dba4d1b0d47ad3a315a02b96ca636fa1fb165b7`. Preserve existing tables, original documents, snapshots, comparisons and retention cleanup. Unused PDF tickets expire after five minutes; the previous backend ignores their purpose. No export files need restoring or purging. Previously downloaded user copies cannot be revoked.
 
 ## Stage 8 migration and release
 

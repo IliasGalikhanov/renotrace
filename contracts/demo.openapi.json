@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "RenoTrace API",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "paths": {
     "/api/demo/scenarios": {
@@ -957,6 +957,92 @@
             }
           }
         }
+      }
+    },
+    "/api/guest/projects/{project_id}/exports": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Export Ticket",
+        "description": "Authorize an immutable snapshot/comparison PDF; not a draft or current form.",
+        "operationId": "export_ticket_api_guest_projects__project_id__exports_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/export": {
+      "get": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Export Download",
+        "description": "Direct binary download using a single-use PDF-only Authorization ticket (never a URL).",
+        "operationId": "export_download_api_guest_export_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/guest/transfer": {
@@ -3071,6 +3157,30 @@
           "origin"
         ],
         "title": "Evidence"
+      },
+      "ExportRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "snapshot",
+              "comparison"
+            ],
+            "title": "Kind"
+          },
+          "result_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "title": "Result Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "result_id"
+        ],
+        "title": "ExportRequest"
       },
       "HTTPValidationError": {
         "properties": {

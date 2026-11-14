@@ -418,3 +418,17 @@
 .rechecks button {
   margin: 0.4rem 0.4rem 0.4rem 0;
 }
+.pdf-export {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #a8bbb1;
+  border-radius: 0.5rem;
+  background: #f2f5ef;
+  overflow-wrap: anywhere;
+}
+.pdf-export h4 {
+  margin: 0 0 0.6rem;
+}
+.pdf-version {
+  font-size: 0.85rem;
+}

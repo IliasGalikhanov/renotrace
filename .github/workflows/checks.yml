@@ -1,0 +1,48 @@
+name: Foundation checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.13.8"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install locked Python dependencies
+        run: uv sync --locked
+      - name: Install locked Node dependencies
+        run: npm ci
+      - name: Specification integrity
+        run: uv run --locked python tools/validate_spec.py
+      - name: Python lint
+        run: uv run --locked ruff check services/backend tools/smoke_test.py
+      - name: Python formatting
+        run: uv run --locked ruff format --check services/backend tools/smoke_test.py
+      - name: Python static types
+        run: uv run --locked mypy
+      - name: Ledger, API and CLI tests
+        run: uv run --locked pytest --cov=app.ledger --cov-report=term-missing
+      - name: Production web build
+        run: npm run build
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Real HTTP startup checks
+        run: uv run --locked python tools/smoke_test.py

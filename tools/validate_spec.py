@@ -159,7 +159,7 @@ def main():
     print(f'PASS: {len(md_paths)} source Markdown files, {len(ops)} API operations, 16 financial reference cases, extraction example.')
     for note in standards:
         print(note)
-    print('Scope: specification integrity/reference arithmetic only; application and OCR/LLM behavior are not implemented or tested.')
+    print('Scope: specification integrity/reference arithmetic only; run the separate application tests for ledger behavior. OCR/LLM is not evaluated here.')
 
 
 if __name__ == '__main__':

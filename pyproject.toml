@@ -1,0 +1,58 @@
+[project]
+name = "renotrace-backend"
+version = "0.1.0"
+description = "RenoTrace deterministic ledger and FastAPI foundation"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "fastapi==0.162.7",
+  "pydantic==2.14.3",
+  "uvicorn==0.54.0",
+]
+
+[project.scripts]
+renotrace-ledger = "app.cli:main"
+
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["services/backend/app"]
+
+[dependency-groups]
+dev = [
+  "pytest==9.2.0",
+  "pytest-cov==7.1.0",
+  "hypothesis==6.170.15",
+  "httpx2==2.16.0",
+  "ruff==0.17.5",
+  "mypy==2.4.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["services/backend/tests"]
+addopts = "-ra --strict-markers --basetemp=.cache/pytest"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+include = ["services/backend/**/*.py", "tools/smoke_test.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["services/backend/app"]
+
+[tool.coverage.run]
+branch = true
+source = ["app.ledger"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95

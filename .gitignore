@@ -8,6 +8,11 @@
 .aws/
 .codex/
 .agents/
+.tools/
+.runtime/
+.cache/
+.npm-cache/
+build/
 
 # JavaScript
 node_modules/

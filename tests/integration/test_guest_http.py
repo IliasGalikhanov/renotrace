@@ -5,6 +5,7 @@ Set GUEST_API_URL after starting infra/guest.compose.yml and setup_guest_local.p
 
 import os
 import time
+import warnings
 from pathlib import Path
 
 import httpx2 as httpx
@@ -34,7 +35,10 @@ def upload(client, project, name, content=None):
     assert ticket.status_code == 200, ticket.text
     response = client.put(
         "/api/guest/transfer",
-        headers={"Authorization": "Bearer " + ticket.json()["token"]},
+        headers={
+            "Authorization": "Bearer " + ticket.json()["token"],
+            "Content-Type": "application/octet-stream",
+        },
         content=content if content is not None else (FILES / name).read_bytes(),
     )
     return response
@@ -168,7 +172,23 @@ def test_rejections_unreadable_and_missing_base(guest):
     for name in ("password.pdf", "too-many-pages.pdf"):
         assert upload(client, project, name).status_code == 422
     assert upload(client, project, "wrong.pdf", b"not a pdf").status_code == 422
-    assert upload(client, project, "large.pdf", b"x" * (10 * 1024 * 1024 + 1)).status_code == 413
+    try:
+        oversized = upload(client, project, "large.pdf", b"x" * (10 * 1024 * 1024 + 1))
+    except httpx.ReadError:
+        # Public intermediaries may terminate oversized requests (RFC 9110 15.5.14).
+        # Local/CI checks still require 413. Valid uploads never allow this exception.
+        if os.environ.get("GUEST_ALLOW_OVERSIZE_DISCONNECT") != "1":
+            raise
+        warnings.warn(
+            "Oversized public upload connection closed: HTTP 413 was not observed. "
+            "Checking unchanged state and successful subsequent valid calculation.",
+            stacklevel=1,
+        )
+    else:
+        assert oversized.status_code == 413
+    unchanged = client.get(f"/api/guest/projects/{project}")
+    assert unchanged.status_code == 200
+    assert unchanged.json()["project"]["documents"] == []
     assert upload(client, project, "unreadable.png").status_code == 200
     data = ready(client, project)
     assert data["project"]["documents"][0]["candidates"] == []
@@ -181,6 +201,36 @@ def test_rejections_unreadable_and_missing_base(guest):
     ]
     assert result["calculation"]["remaining_commitment_cents"] is None
     assert result["calculation"]["net_paid_cents"] == 300000
+
+
+def test_valid_large_original_round_trips_through_transfer_api(guest):
+    import io
+
+    from pypdf import PdfWriter
+
+    client, project = guest
+    writer = PdfWriter(clone_from=io.BytesIO((FILES / "estimate.pdf").read_bytes()))
+    writer.add_metadata({"/SyntheticPadding": "x" * (9 * 1024 * 1024)})
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    content = buffer.getvalue()
+    assert 9 * 1024 * 1024 < len(content) < 10 * 1024 * 1024
+    response = upload(client, project, "large-valid-estimate.pdf", content)
+    assert response.status_code == 200, response.text
+    document = response.json()
+    assert document["size"] == len(content)
+    ticket = client.post(
+        f"/api/guest/projects/{project}/tickets",
+        json={"purpose": "download", "file_id": document["id"]},
+    ).json()
+    original = client.get(
+        "/api/guest/transfer", headers={"Authorization": "Bearer " + ticket["token"]}
+    )
+    assert original.status_code == 200
+    assert original.content == content
+    data = ready(client, project)
+    assert data["project"]["documents"][0]["status"] == "ready"
+    assert data["project"]["documents"][0]["candidates"][0]["amount"] == "10000.00"
 
 
 def test_project_page_quota_is_enforced_by_server(guest):

@@ -25,7 +25,9 @@ $env:GUEST_LOCAL_DB='1'
 npm run test:guest
 ```
 
-Stop the manually started frontend before Playwright, which starts its own frontend. Remote mode: set `RENOTRACE_BASE_URL=https://renotrace.vercel.app`, then `npm run test:guest`; no local servers are started in that mode. The legacy `npm run test:e2e` / `npm run test:remote` retain their original demo behavior.
+Stop the manually started frontend before Playwright, which starts its own frontend. Remote mode: set `RENOTRACE_BASE_URL=https://renotrace.vercel.app`, then `npm run test:guest -- --timeout=600000`; no local servers are started in that mode. The larger whole-journey timeout accommodates the free backend under concurrent OCR load. The legacy `npm run test:e2e` / `npm run test:remote` retain their original demo behavior.
+
+Public API checks use `GUEST_API_URL=https://renotrace-api.onrender.com` and `pytest tests/integration/test_guest_http.py`. The public oversized-upload transport can close the connection instead of returning HTTP 413. For that known diagnostic only, set `GUEST_ALLOW_OVERSIZE_DISCONNECT=1`: the test then still requires no saved document and a successful subsequent valid calculation. The opt-in never accepts transport failures for valid files. Keep it unset in local/CI checks, which require HTTP 413. The large-valid-original case uploads and downloads a PDF exceeding 9 MiB, checking exact bytes and real extraction. Do not set `GUEST_LOCAL_DB` for public tests; persistence tests intentionally target only disposable local services.
 
 ### Production configuration
 
@@ -86,7 +88,7 @@ docker build -f infra/backend.Dockerfile -t renotrace-demo:stage5 .
 docker run --rm --name renotrace-demo -e PORT=8000 -p 8000:8000 renotrace-demo:stage5
 ```
 
-The Dockerfile pins Python 3.13.18 and uv 0.13.8, installs application dependencies using `uv sync --locked --no-dev --no-editable`, packages inline samples, and runs as UID 10001. No Node runtime, database, secrets or volume is needed. `.dockerignore` excludes local environments, credentials, browser artifacts and private runtime data. Host is `0.0.0.0`; use the hosting platform's `PORT` variable (default 8000). Configure its HTTP health probe to `/healthz`. Docker also declares a localhost health check using the same port.
+The Dockerfile pins Python 3.13.18 and uv 0.13.8, installs application dependencies using `uv sync --locked --no-dev --no-editable`, packages inline samples, and runs as UID 10001. The synthetic demo alone needs no database or secrets; guest reviews require the external services and environment described above. No Node runtime or persistent volume belongs in the production backend container. `.dockerignore` excludes local environments, credentials, browser artifacts and private backups. Host is `0.0.0.0`; use the hosting platform's `PORT` variable (default 8000). Configure its HTTP health probe to `/healthz`. Docker also declares a localhost health check using the same port.
 
 After hosting the container on a platform you choose, verify:
 

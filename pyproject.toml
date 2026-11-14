@@ -31,7 +31,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["services/backend/tests"]
-addopts = "-ra --strict-markers --basetemp=.cache/pytest"
+addopts = "-ra --strict-markers --basetemp=.pytest_tmp"
 
 [tool.ruff]
 target-version = "py313"

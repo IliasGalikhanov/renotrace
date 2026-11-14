@@ -93,7 +93,7 @@ npm run typecheck
 .\scripts\uv.ps1 run --locked python tools/smoke_test.py
 ```
 
-The smoke check starts actual FastAPI and built Next.js servers on temporary loopback ports, checks HTTP 200 and expected response content, then stops both. Tests require local loopback sockets; a network sandbox that blocks Python's local socket pair can stall ASGI startup. Run these checks in a normal terminal. Pytest temporary files stay under `.cache/pytest`.
+The smoke check starts actual FastAPI and built Next.js servers on temporary loopback ports, checks HTTP 200 and expected response content, then stops both. Tests require local loopback sockets; a network sandbox that blocks Python's local socket pair can stall ASGI startup. Run these checks in a normal terminal. Pytest creates `.pytest_tmp` directly under the repository root, so a fresh checkout needs no pre-existing cache directory.
 
 FIN-01…FIN-16 exercise the actual calculator with the supplied normalized records. Additional tests cover pending/failed/reversed payments and refunds, unknown/zero bases, negative remainders, strict integers, range/aggregate overflow, unique record IDs, source references, CLI errors, arbitrary record order, and request independence. Hypothesis generates multiple inputs for the invariants. Ledger coverage is measured with branches and a 95% minimum gate.
 

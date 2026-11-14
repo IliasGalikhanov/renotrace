@@ -6,6 +6,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .invoice_models import InvoiceProposal, InvoiceReview, RequestVersion
+
 Kind = Literal[
     "agreement", "adjustment", "payment_request", "payment", "refund", "condition", "unknown"
 ]
@@ -46,6 +48,7 @@ class Document(Model):
     page_count: int
     pages: list[Page] = Field(default_factory=list)
     candidates: list[Candidate] = Field(default_factory=list)
+    invoice_proposals: list[InvoiceProposal] = Field(default_factory=list)
     status: Literal["queued", "processing", "ready", "failed"] = "queued"
     error: str | None = None
 
@@ -74,6 +77,10 @@ class ReviewCommand(Model):
     request_id: ShortText | None = None
     cutoff_date: Date
     links: Annotated[list[LinkChoice], Field(max_length=100)] = Field(default_factory=list)
+    invoices: Annotated[list[InvoiceReview], Field(max_length=20)] = Field(default_factory=list)
+    request_versions: Annotated[list[RequestVersion], Field(max_length=20)] = Field(
+        default_factory=list
+    )
 
 
 class SavedReview(Model):

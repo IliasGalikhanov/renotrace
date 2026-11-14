@@ -20,6 +20,7 @@ from pypdf import PdfReader
 
 from app.ledger.models import MAX_CENTS
 
+from .invoice_models import InvoiceProposal, LineKind
 from .models import Candidate, Kind, Page, Problem
 
 MAX_BYTES = 10 * 1024 * 1024
@@ -27,6 +28,58 @@ MAX_PIXELS = 16_000_000
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 MONEY = re.compile(r"^(?:USD\s*|\$\s*)?(-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?)$")
 AMOUNT = re.compile(r"(?:USD\s*|\$\s*)-?[\d,.]+|(?<![\d.])-?[\d,]+\.\d+(?!\d)")
+ITEM = re.compile(
+    r"^(Work|Charge|Discount|Credit|Payment reflected|Condition)"
+    r"(?:\s*\[([\w-]{1,60})\])?\s*:\s*(.+)$",
+    re.I,
+)
+
+
+def invoice_proposals(file_id: str, page: Page) -> list[InvoiceProposal]:
+    """Conservative labelled rows; arbitrary tables remain a manual-review task."""
+    if "invoice" not in page.text.lower():
+        return []
+    proposals = []
+    kinds: dict[str, LineKind] = {
+        "work": "work",
+        "charge": "charge",
+        "discount": "discount",
+        "credit": "credit",
+        "payment reflected": "reflected_payment",
+        "condition": "condition",
+    }
+    for index, text in enumerate(page.text.splitlines()):
+        match = ITEM.match(text.strip())
+        if not match:
+            continue
+        parts = [part.strip() for part in match[3].split("|")]
+        kind = kinds[match[1].lower()]
+        usd = bool(re.search(r"\bUSD\b|\$", page.text))
+        other_currency = bool(re.search(r"\b(?:EUR|GBP|CAD|AUD|KZT|RUB)\b|[€£₸₽]", text))
+        value = (
+            amount_text(parts[1])
+            if len(parts) > 1 and kind != "condition" and usd and not other_currency
+            else None
+        )
+        digest = hashlib.sha256(f"{file_id}:{page.number}:{index}:invoice".encode()).hexdigest()[
+            :24
+        ]
+        options = dict(part.split(":", 1) for part in parts[2:] if ":" in part)
+        proposals.append(
+            InvoiceProposal(
+                id="line-" + digest,
+                page=page.number,
+                kind=kind,
+                description=parts[0][:600],
+                amount=value,
+                source_key=match[2],
+                quantity=options.get("Qty"),
+                unit_price=amount_text(options["Unit"]) if "Unit" in options else None,
+                original_text=text[:1000],
+                origin=page.method,
+            )
+        )
+    return proposals
 
 
 def cents(value: str) -> int:
@@ -176,6 +229,9 @@ def semantic_candidates(file_id: str, page: Page) -> list[Candidate]:
     usd_document = bool(re.search(r"\bUSD\b|\$", text))
     for index, line in enumerate(text.splitlines()):
         line = line.strip()
+        if "invoice" in low and ITEM.match(line):
+            # Composition is document evidence, never a second cash/contract event.
+            continue
         label = line.lower()
         kind = default
         condition = bool(re.match(r"(?:payment terms|payment conditions|due date)\s*:", label))

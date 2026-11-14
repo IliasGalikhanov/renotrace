@@ -385,3 +385,36 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.invoice-editor,
+.invoice-line,
+.recheck-package,
+.comparison-change {
+  min-width: 0;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #cfdbd2;
+  border-radius: 10px;
+}
+.rechecks label {
+  display: block;
+  margin: 0.8rem 0;
+}
+.rechecks select,
+.invoice-editor input,
+.invoice-editor select {
+  max-width: 100%;
+}
+.rechecks pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 24rem;
+  overflow: auto;
+}
+.rechecks p,
+.rechecks article,
+.invoice-editor code {
+  overflow-wrap: anywhere;
+}
+.rechecks button {
+  margin: 0.4rem 0.4rem 0.4rem 0;
+}

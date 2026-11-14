@@ -1,6 +1,28 @@
 # Deploying RenoTrace
 
-See [stage 7 report](STAGE_7_REPORT.md) for the latest release gate. Stage 5 below is the prior stateless release; stage 6 adds private expiring guest reviews, PostgreSQL, object storage and real OCR. Stage 7 reuses these resources for question history and immutable calculations. Account registration is not required.
+See [stage 8 report](STAGE_8_REPORT.md) for the latest release gate. Stage 5 below is the prior stateless release; stage 6 adds private expiring guest reviews, PostgreSQL, object storage and real OCR. Stages 7/8 reuse these resources for question history, immutable calculations and invoice comparisons. Account registration is not required.
+
+## Stage 8 migration and release
+
+No new service or secret is needed. Existing Vercel Hobby, Render Free and Supabase Free resources are reused, without paid additions. After CI passes for the release SHA, use its checked checkout to apply the additive migration **before** deploying the new backend:
+
+```powershell
+.\scripts\uv.ps1 run --locked --env-file .env.guest.local python -m app.guest.manage migrate
+```
+
+The API does not migrate on startup. New `invoice_state`, `rechecks` and immutable `comparisons` tables reference existing projects with deletion cascades. Existing source/project data, stage 7 cards/replies/snapshots and original expiry are preserved; old snapshots are not backfilled. The original project JSON shape remains readable by the stage 7 backend; invoice additions live in the side table and are reattached only to their saved review ID.
+
+Deploy the checked SHA to Render first, check `/healthz`, OpenAPI `0.8.0` and recheck routes, then deploy the same SHA to Vercel with existing production variables. Keep auto-deploy disabled. Run public stage 8 Playwright and the separate demo regression, without local servers:
+
+```powershell
+$env:RENOTRACE_BASE_URL='https://renotrace.vercel.app'
+npm run test:guest -- --grep 'recheck corrected' --timeout=600000
+npm run test:remote
+```
+
+Rollback: return Vercel to the previous stage 7 deployment first; then restore backend SHA `6cb667c5308a9cee98b722f7b3956dcd8ffd58dc` if needed. Preserve all additive tables and cleanup. Stage 7 deletion still cascades the new rows. Its interface does not expose comparisons. A review saved by the older backend has no stage 8 invoice assessment; on upgrade the older side-table assessment is not silently applied to that new review. Existing frozen comparisons remain readable after upgrade but require current-evidence rechecking. Never restore expired/deleted guest evidence or drop the new tables as a rollback shortcut.
+
+Local integration tests validate populated migrations, legacy-compatible project JSON, concurrent saves, restart recovery and cascades. See [stage 8 contract](RECHECK_CONTRACT.md) for exact semantics and limits. Public release verification is recorded in the stage report; a local build alone is not a release.
 
 ## Stage 7 migration and release
 

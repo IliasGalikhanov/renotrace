@@ -19,6 +19,8 @@ from .casework_models import (
 )
 from .extraction import MAX_BYTES
 from .models import Document, ReviewCommand, Session, Ticket, TicketRequest
+from .recheck_models import Comparison, RunRecheck, SavePackage, StartRecheck
+from .recheck_store import Rechecks
 from .service import Reviews
 
 router = APIRouter(prefix="/api/guest", tags=["guest reviews"])
@@ -95,6 +97,33 @@ def attachments(
     project_id: str, command: AttachmentCommand, reviews: Service, secret: Secret
 ) -> ProjectResponse:
     return reviews.casework.mutate(project_id, secret, "attachments", command)
+
+
+@router.post("/projects/{project_id}/rechecks", response_model=ProjectResponse)
+def start_recheck(
+    project_id: str, command: StartRecheck, reviews: Service, secret: Secret
+) -> ProjectResponse:
+    return Rechecks(reviews.db).mutate(project_id, secret, command)
+
+
+@router.post("/projects/{project_id}/rechecks/{draft_id}/package", response_model=ProjectResponse)
+def save_package(
+    project_id: str, draft_id: str, command: SavePackage, reviews: Service, secret: Secret
+) -> ProjectResponse:
+    return Rechecks(reviews.db).mutate(project_id, secret, command, draft_id)
+
+
+@router.post("/projects/{project_id}/rechecks/{draft_id}/run", response_model=ProjectResponse)
+def run_recheck(
+    project_id: str, draft_id: str, command: RunRecheck, reviews: Service, secret: Secret
+) -> ProjectResponse:
+    return Rechecks(reviews.db).mutate(project_id, secret, command, draft_id)
+
+
+@router.get("/projects/{project_id}/comparisons/{comparison_id}", response_model=Comparison)
+def comparison(project_id: str, comparison_id: str, reviews: Service, secret: Secret) -> Comparison:
+    """Serve the immutable comparison without rerunning its algorithm or the ledger."""
+    return Rechecks(reviews.db).comparison(project_id, secret, comparison_id)
 
 
 @router.post("/projects/{project_id}/tickets", response_model=Ticket)

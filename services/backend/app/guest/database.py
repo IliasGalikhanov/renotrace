@@ -75,7 +75,16 @@ class Database:
         lock: bool = False,
         worker: bool = False,
     ) -> Project:
-        sql = "SELECT data FROM guest_review.projects WHERE id=%s AND expires_at>now()"
+        sql = (
+            "SELECT data,(SELECT data FROM guest_review.invoice_state "
+            "WHERE project_id=guest_review.projects.id) AS invoice_state "
+            "FROM guest_review.projects WHERE id=%s AND expires_at>now()"
+        )
+        if lock:
+            # Read sidecar after obtaining the project lock. A correlated subquery in
+            # SELECT FOR UPDATE can see the pre-wait MVCC snapshot while PostgreSQL
+            # returns the newly committed project row after a concurrent save.
+            sql = "SELECT data FROM guest_review.projects WHERE id=%s AND expires_at>now()"
         parameters: tuple[str, ...] = (project_id,)
         if not worker:
             sql += " AND owner_hash=%s"
@@ -85,12 +94,42 @@ class Database:
         row = connection.execute(sql, parameters).fetchone()
         if row is None:
             raise Problem(404, "Review not found or expired")
-        return Project.model_validate_json(json.dumps(row["data"]))
+        data = row["data"]
+        if lock:
+            saved = connection.execute(
+                "SELECT data FROM guest_review.invoice_state WHERE project_id=%s", (project_id,)
+            ).fetchone()
+            sidecar = saved["data"] if saved else {}
+        else:
+            sidecar = row.get("invoice_state") or {}
+        for document in data["documents"]:
+            document["invoice_proposals"] = sidecar.get("proposals", {}).get(document["id"], [])
+        if data.get("review") and data["review"]["id"] == sidecar.get("review_id"):
+            data["review"]["command"].update(sidecar.get("review_fields", {}))
+        return Project.model_validate_json(json.dumps(data))
 
     def save(self, connection: Connection, project: Project) -> None:
+        # Keep the original JSON shape readable by stage 7 during a rollback.
+        data = project.model_dump(mode="json")
+        proposals = {d["id"]: d.pop("invoice_proposals") for d in data["documents"]}
+        review = data.get("review")
+        fields = (
+            {key: review["command"].pop(key) for key in ("invoices", "request_versions")}
+            if review
+            else {}
+        )
+        sidecar = {
+            "proposals": proposals,
+            "review_id": review["id"] if review else None,
+            "review_fields": fields,
+        }
         connection.execute(
-            "UPDATE guest_review.projects SET data=%s::jsonb WHERE id=%s",
-            (project.model_dump_json(), project.id),
+            "WITH saved AS (UPDATE guest_review.projects SET data=%s::jsonb "
+            "WHERE id=%s RETURNING id) "
+            "INSERT INTO guest_review.invoice_state(project_id,data) "
+            "SELECT id,%s::jsonb FROM saved "
+            "ON CONFLICT(project_id) DO UPDATE SET data=excluded.data",
+            (json.dumps(data), project.id, json.dumps(sidecar)),
         )
 
     def read(self, project_id: str, token: str) -> Project:

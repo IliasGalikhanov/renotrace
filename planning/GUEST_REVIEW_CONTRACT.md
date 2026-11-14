@@ -1,5 +1,7 @@
 # Private guest document review
 
+Stage 8 adds [checked invoice composition, explicit request versions and saved rechecks](RECHECK_CONTRACT.md). These document-comparison rows do not create new ledger charges or cash movements. The guest access, source ownership and expiry rules below remain in force.
+
 Stage 7 extends this foundation with [persistent questions, replies and immutable calculation snapshots](CASEWORK_CONTRACT.md). The separate contract documents the new routes, two state axes, idempotency and additive migration. The original 24-hour lifetime and financial freshness checks are unchanged.
 
 The main flow is **Review my invoice** → upload current invoice and supporting documents → check candidates and links → calculate. No account, email, password form or Supabase Auth. **Try sample** remains a separate, stateless synthetic demo. Guest calculations never load demo fixtures.

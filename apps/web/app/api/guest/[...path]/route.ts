@@ -22,17 +22,26 @@ async function proxy(
     (project &&
       ((path.length === 2 && ["GET", "DELETE"].includes(request.method)) ||
         (path.length === 3 &&
-          ["review", "tickets", "replies", "attachments"].includes(path[2]) &&
+          ["review", "tickets", "replies", "attachments", "rechecks"].includes(
+            path[2],
+          ) &&
           request.method === "POST") ||
         (path[2] === "snapshots" &&
           request.method === "GET" &&
           (path.length === 3 ||
             (path.length === 4 && /^[a-f0-9-]{36}$/.test(path[3])))) ||
+        (path[2] === "comparisons" &&
+          path.length === 4 &&
+          request.method === "GET" &&
+          /^[a-f0-9-]{36}$/.test(path[3])) ||
         (path.length === 5 &&
           request.method === "POST" &&
-          ((path[2] === "questions" &&
-            /^q-[a-f0-9]{32}$/.test(path[3]) &&
-            path[4] === "state") ||
+          ((path[2] === "rechecks" &&
+            /^[a-f0-9-]{36}$/.test(path[3]) &&
+            ["package", "run"].includes(path[4])) ||
+            (path[2] === "questions" &&
+              /^q-[a-f0-9]{32}$/.test(path[3]) &&
+              path[4] === "state") ||
             (path[2] === "replies" &&
               /^[a-f0-9-]{36}$/.test(path[3]) &&
               path[4] === "edit")))));

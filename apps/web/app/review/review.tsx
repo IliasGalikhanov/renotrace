@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Casework, { type CaseworkView } from "./casework";
+import InvoiceEditor from "./invoice-editor";
+import Rechecks, { type RecheckView } from "./rechecks";
+import type { InvoiceReview, Proposal, Composition } from "./invoice-types";
 
 type Kind =
   | "agreement"
@@ -38,6 +41,7 @@ type Document = {
     warning: string | null;
   }[];
   candidates: Candidate[];
+  invoice_proposals: Proposal[];
   status: string;
   error: string | null;
 };
@@ -46,13 +50,15 @@ type LinkChoice = {
   from_id: string;
   to_id: string;
 };
-type Command = {
+export type Command = {
   expected_revision: number;
   records: Choice[];
   agreement_id: string | null;
   request_id: string | null;
   cutoff_date: string;
   links: LinkChoice[];
+  invoices: InvoiceReview[];
+  request_versions: { old_request_id: string; new_request_id: string }[];
 };
 type Source = {
   source_id: string;
@@ -63,6 +69,7 @@ type Source = {
   origin: string;
 };
 export type Result = {
+  invoice_compositions: Composition[];
   calculation: {
     requested_now_cents: number | null;
     remaining_commitment_cents: number | null;
@@ -104,6 +111,7 @@ export type State = {
   };
   result: Result;
   casework: CaseworkView;
+  rechecks: RecheckView;
 };
 const labels: Record<Kind, string> = {
   agreement: "Estimate / contract price",
@@ -164,6 +172,16 @@ function draft(state: State): Command {
     cutoff_date:
       saved?.command.cutoff_date ?? new Date().toISOString().slice(0, 10),
     links: current ? (saved?.command.links ?? []) : [],
+    invoices: (saved?.command.invoices ?? []).map((i) =>
+      current
+        ? i
+        : {
+            ...i,
+            complete: false,
+            lines: i.lines.map((l) => ({ ...l, review: "unknown" as const })),
+          },
+    ),
+    request_versions: saved?.command.request_versions ?? [],
   };
 }
 
@@ -364,6 +382,33 @@ export default function GuestReview() {
       setError((e as Error).message);
     } finally {
       setBusy("");
+    }
+  }
+
+  async function recheckMutation(
+    path: string,
+    body: unknown,
+  ): Promise<boolean> {
+    if (busy || pending) return false;
+    const id = ++generation.current;
+    setBusy(
+      path.endsWith("/run")
+        ? "Rechecking reviewed evidence and saving comparison…"
+        : "Saving your recheck package…",
+    );
+    setError("");
+    try {
+      const next = await api<State>(path, "POST", body);
+      if (id === generation.current) {
+        if (path.endsWith("/run")) accept(next);
+        else setState(next); // Package/discussion is not a financial revision; keep unsaved choices.
+      }
+      return true;
+    } catch (e) {
+      if (id === generation.current) setError((e as Error).message);
+      return false;
+    } finally {
+      if (id === generation.current) setBusy("");
     }
   }
 
@@ -828,6 +873,13 @@ export default function GuestReview() {
                 Saving records these choices against the current document set.
                 Corrections remain separate from your immutable originals.
               </p>
+              <InvoiceEditor
+                state={state}
+                command={command}
+                change={change}
+                disabled={!!busy || pending}
+                openSource={openSource}
+              />
               <button
                 className="guest-primary"
                 disabled={!!busy || pending}
@@ -949,6 +1001,47 @@ export default function GuestReview() {
                     </details>
                   ))}
                 </details>
+                {state.result.invoice_compositions
+                  .filter(
+                    (invoice) =>
+                      invoice.request_id ===
+                      state.project.review?.command.request_id,
+                  )
+                  .map((invoice) => (
+                    <details key={invoice.file_id} open>
+                      <summary>Checked invoice composition</summary>
+                      <p>
+                        {invoice.complete
+                          ? "Composition reconciles with the requested total."
+                          : "Incomplete composition — check the missing or unresolved evidence."}
+                      </p>
+                      <p>
+                        Checked positions total:{" "}
+                        {money(invoice.accounted_cents)}. Requested:{" "}
+                        {money(invoice.requested_cents)}. Unexplained
+                        difference:{" "}
+                        <strong>{money(invoice.unexplained_cents)}</strong>.
+                      </p>
+                      <ul>
+                        {invoice.issues.map((issue) => (
+                          <li key={issue}>{issue}</li>
+                        ))}
+                      </ul>
+                      {invoice.lines.map((line) => (
+                        <p key={line.value.id}>
+                          {line.value.description} · {money(line.amount_cents)}{" "}
+                          · {line.value.review}{" "}
+                          <button
+                            onClick={() =>
+                              void openSource(invoice.file_id, line.value.page)
+                            }
+                          >
+                            View composition source page {line.value.page}
+                          </button>
+                        </p>
+                      ))}
+                    </details>
+                  ))}
               </>
             )}
           </section>
@@ -959,6 +1052,16 @@ export default function GuestReview() {
             read={api}
             openSource={openSource}
           />
+          {command && (
+            <Rechecks
+              state={state}
+              command={command}
+              disabled={!!busy || pending}
+              mutate={recheckMutation}
+              read={api}
+              openSource={openSource}
+            />
+          )}
           <section className="guest-delete">
             <p>
               This review is temporary. Deletion revokes access and removes your

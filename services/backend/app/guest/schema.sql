@@ -77,3 +77,26 @@ DROP TRIGGER IF EXISTS immutable_snapshot ON guest_review.snapshots;
 CREATE TRIGGER immutable_snapshot BEFORE UPDATE ON guest_review.snapshots
 FOR EACH ROW EXECUTE FUNCTION guest_review.immutable_snapshot();
 REVOKE ALL ON ALL TABLES IN SCHEMA guest_review FROM PUBLIC;
+-- Stage 8: additive owner-scoped drafts and immutable comparison evidence.
+CREATE TABLE IF NOT EXISTS guest_review.invoice_state (
+    project_id text PRIMARY KEY REFERENCES guest_review.projects(id) ON DELETE CASCADE,
+    data jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guest_review.rechecks (
+    id text PRIMARY KEY,
+    project_id text NOT NULL REFERENCES guest_review.projects(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    data jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guest_review.comparisons (
+    id text PRIMARY KEY,
+    project_id text NOT NULL REFERENCES guest_review.projects(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    data jsonb NOT NULL
+);
+CREATE INDEX IF NOT EXISTS rechecks_project ON guest_review.rechecks(project_id);
+CREATE INDEX IF NOT EXISTS comparisons_project ON guest_review.comparisons(project_id);
+DROP TRIGGER IF EXISTS immutable_comparison ON guest_review.comparisons;
+CREATE TRIGGER immutable_comparison BEFORE UPDATE ON guest_review.comparisons
+FOR EACH ROW EXECUTE FUNCTION guest_review.immutable_snapshot();
+REVOKE ALL ON ALL TABLES IN SCHEMA guest_review FROM PUBLIC;

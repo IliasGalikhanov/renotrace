@@ -4,7 +4,7 @@ import json
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from .calculation import ProjectResponse, ReviewResult, result_for
+from .calculation import ProjectResponse, ReviewResult, result_for, validate_command
 from .casework import assess, event, fingerprint, reconcile
 from .casework_models import (
     CONTRACT_VERSION,
@@ -20,7 +20,7 @@ from .casework_models import (
     SnapshotSummary,
 )
 from .database import Connection, Database
-from .models import Model, Problem, Project
+from .models import Model, Problem, Project, ReviewCommand, SavedReview
 
 
 def view(connection: Connection, project_id: str) -> CaseworkView:
@@ -81,7 +81,45 @@ def response(
     if project.review:
         state.cards = reconcile(project, result, state.cards)
     save_cards(connection, project, state.cards)
-    return ProjectResponse(project=project, result=result, casework=state)
+    from .recheck_store import recheck_view
+
+    return ProjectResponse(
+        project=project,
+        result=result,
+        casework=state,
+        rechecks=recheck_view(connection, project, state),
+    )
+
+
+def save_review(
+    connection: Connection, db: Database, project: Project, command: ReviewCommand
+) -> ProjectResponse:
+    """One financial save path shared by initial reviews and explicit rechecks."""
+    if any(d.status in ("queued", "processing") for d in project.documents):
+        raise Problem(409, "Wait for document processing before saving your review")
+    validate_command(project, command)
+    project.revision += 1
+    saved = SavedReview(
+        id=str(uuid4()),
+        basis_revision=project.revision,
+        created_at=datetime.now(UTC),
+        command=command,
+    )
+    project.review = saved
+    try:
+        result = result_for(project)
+    except ValueError as error:
+        raise Problem(
+            422, "These records or relationships conflict. Check their meanings and links."
+        ) from error
+    db.save(connection, project)
+    connection.execute(
+        "INSERT INTO guest_review.audit(id,project_id,data) VALUES (%s,%s,%s::jsonb)",
+        (saved.id, project.id, saved.model_dump_json()),
+    )
+    data = response(connection, project, result)
+    freeze(connection, data)
+    return data
 
 
 def replay(

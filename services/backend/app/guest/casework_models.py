@@ -7,7 +7,7 @@ from pydantic import Field
 
 from .models import Model
 
-CONTRACT_VERSION = "guest-review/2"
+CONTRACT_VERSION = "guest-review/3"
 MutationID = Annotated[str, Field(pattern=r"^[a-f0-9-]{36}$")]
 EntityIDs = Annotated[list[str], Field(min_length=1, max_length=20)]
 EvidenceState = Literal[

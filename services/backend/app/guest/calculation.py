@@ -27,7 +27,9 @@ from app.normalization.models import (
 
 from .casework_models import CaseworkView
 from .extraction import cents
+from .invoices import Composition, compose, validate_invoices
 from .models import Model, Problem, Project, RecordChoice, ReviewCommand
+from .recheck_models import RecheckView
 
 
 class Evidence(Model):
@@ -48,12 +50,14 @@ class ReviewResult(Model):
     incomplete_metrics: list[Metric]
     sources: list[Evidence]
     conditions: list[Evidence] = Field(default_factory=list)
+    invoice_compositions: list[Composition] = Field(default_factory=list)
 
 
 class ProjectResponse(Model):
     project: Project
     result: ReviewResult
     casework: CaseworkView = Field(default_factory=CaseworkView)
+    rechecks: RecheckView = Field(default_factory=RecheckView)
 
 
 def validate_command(project: Project, command: ReviewCommand) -> None:
@@ -95,6 +99,7 @@ def validate_command(project: Project, command: ReviewCommand) -> None:
         if pair in pairs:
             raise Problem(422, "Duplicate relationship")
         pairs.add(pair)
+    validate_invoices(project, command)
 
 
 def result_for(project: Project) -> ReviewResult:
@@ -110,6 +115,15 @@ def result_for(project: Project) -> ReviewResult:
     conditions: list[Evidence] = []
     choices = {r.id: r for r in review.command.records} if review else {}
     current = review is not None and review.basis_revision == project.revision
+    selected_file = next(
+        (
+            d.id
+            for d in project.documents
+            for c in d.candidates
+            if review and c.id == review.command.request_id
+        ),
+        None,
+    )
     all_metrics: tuple[Metric, ...] = (
         "commitment_total_cents",
         "net_paid_cents",
@@ -204,6 +218,12 @@ def result_for(project: Project) -> ReviewResult:
                 if choice.date is None or choice.kind in ("condition", "unknown"):
                     continue
             if choice.kind == "condition":
+                invoice_file = any(
+                    choices.get(c.id, RecordChoice(id=c.id, kind=c.kind)).kind == "payment_request"
+                    for c in document.candidates
+                )
+                if invoice_file and document.id != selected_file:
+                    continue
                 if choice.answer == "accept" and current:
                     conditions.append(
                         Evidence(
@@ -338,6 +358,80 @@ def result_for(project: Project) -> ReviewResult:
     )
     normalized = normalize(history)
     calculation = calculate(normalized.ledger_input)
+    compositions = [compose(project, i) for i in review.command.invoices] if review else []
+    dispositions = {
+        d.record.record_id: d.canonical_record_id
+        for d in (*normalized.included, *normalized.excluded)
+        if d.canonical_record_id
+    }
+    cash = {e.id: e for e in normalized.ledger_input.cash_events}
+    for composition in compositions:
+        reflected: dict[str, int] = {}
+        for line in composition.lines:
+            if (
+                current
+                and line.value.kind == "condition"
+                and line.value.review == "checked"
+                and review
+                and composition.request_id == review.command.request_id
+            ):
+                conditions.append(
+                    Evidence(
+                        source_id=line.source_ref,
+                        file_id=composition.file_id,
+                        page=line.value.page,
+                        title="Checked invoice condition",
+                        text=line.value.description,
+                        origin=line.origin,
+                    )
+                )
+            if line.value.cash_record_id and line.value.review == "checked":
+                canonical = dispositions.get(line.value.cash_record_id)
+                payment = cash.get(canonical or "")
+                if payment is None or payment.amount_cents <= 0:
+                    composition.issues.append(
+                        "Linked payment is not an accepted completed cash event."
+                    )
+                else:
+                    line.cash_event_id = payment.id
+                    line.cash_evidence_refs = list(payment.evidence_refs)
+                    reflected[payment.id] = reflected.get(payment.id, 0) + (line.amount_cents or 0)
+                    if reflected[payment.id] > payment.amount_cents:
+                        raise Problem(
+                            422, "Invoice reflects more than the linked canonical payment"
+                        )
+        composition.complete = composition.complete and not composition.issues
+        if (
+            composition.request_id == (review.command.request_id if review else None)
+            and not composition.complete
+        ):
+            questions.append(
+                Question(
+                    id=f"INVOICE_COMPOSITION:{composition.file_id}",
+                    code="INVOICE_COMPOSITION",
+                    record_ids=(record_ids.get(composition.request_id, composition.request_id),),
+                    affects=("requested_now_cents",),
+                    message="Check the invoice composition and its unexplained difference. "
+                    + " ".join(composition.issues),
+                )
+            )
+        if (
+            composition.request_id == (review.command.request_id if review else None)
+            and composition.requested_cents is not None
+            and calculation.remaining_commitment_cents is not None
+            and composition.requested_cents != calculation.remaining_commitment_cents
+        ):
+            questions.append(
+                Question(
+                    id=f"REQUEST_RECONCILIATION:{composition.file_id}",
+                    code="REQUEST_RECONCILIATION",
+                    record_ids=(record_ids.get(composition.request_id, composition.request_id),),
+                    affects=("requested_now_cents",),
+                    message="The invoice request differs from the recorded contract remainder. "
+                    "Explain its composition and payment conditions; this difference "
+                    "alone does not prove a missing payment.",
+                )
+            )
     questions.extend(normalized.questions)
     metrics = set(normalized.incomplete_metrics)
     for q in questions:
@@ -349,6 +443,7 @@ def result_for(project: Project) -> ReviewResult:
         sources=evidence,
         questions=questions,
         conditions=conditions,
+        invoice_compositions=compositions,
         incomplete=bool(questions),
         incomplete_metrics=sorted(metrics),
     )

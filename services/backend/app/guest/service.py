@@ -4,16 +4,15 @@ import json
 import secrets
 import subprocess
 import sys
-from datetime import UTC, datetime
 from threading import Event
 from typing import Any
 from uuid import uuid4
 
-from .calculation import ProjectResponse, result_for, validate_command
-from .casework_store import Casework, freeze, remember, replay, response
+from .calculation import ProjectResponse
+from .casework_store import Casework, remember, replay, response, save_review
 from .database import Database, digest
-from .extraction import semantic_candidates
-from .models import Document, Page, Problem, ReviewCommand, SavedReview, Ticket, TicketRequest
+from .extraction import invoice_proposals, semantic_candidates
+from .models import Document, Page, Problem, ReviewCommand, Ticket, TicketRequest
 from .storage import Objects
 
 
@@ -150,31 +149,15 @@ class Reviews:
             project = self.db.load(connection, project_id, token, lock=True)
             if replay(connection, project_id, command.mutation_id, "review", command):
                 return response(connection, project)
-            if any(d.status in ("queued", "processing") for d in project.documents):
-                raise Problem(409, "Wait for document processing before saving your review")
-            validate_command(project, command)
-            project.revision += 1
-            saved = SavedReview(
-                id=str(uuid4()),
-                basis_revision=project.revision,
-                created_at=datetime.now(UTC),
-                command=command,
+            data = save_review(connection, self.db, project, command)
+            remember(
+                connection,
+                project_id,
+                command.mutation_id,
+                "review",
+                command,
+                data.casework.latest_snapshot_id or "",
             )
-            project.review = saved
-            try:
-                result = result_for(project)
-            except ValueError as error:
-                raise Problem(
-                    422, "These records or relationships conflict. Check their meanings and links."
-                ) from error
-            self.db.save(connection, project)
-            connection.execute(
-                "INSERT INTO guest_review.audit(id,project_id,data) VALUES (%s,%s,%s::jsonb)",
-                (saved.id, project.id, saved.model_dump_json()),
-            )
-            data = response(connection, project, result)
-            freeze(connection, data)
-            remember(connection, project_id, command.mutation_id, "review", command, saved.id)
             return data
 
     def delete(self, project_id: str, token: str) -> None:
@@ -239,6 +222,10 @@ class Reviews:
                         raise Problem(422, "Too many candidate values; use a shorter document")
                     document.pages.append(page)
                     document.candidates.extend(candidates)
+                    proposals = invoice_proposals(document.id, page)
+                    if len(document.invoice_proposals) + len(proposals) > 100:
+                        raise Problem(422, "Too many invoice positions; use a shorter document")
+                    document.invoice_proposals.extend(proposals)
                     project.revision += 1
                     self.db.save(connection, project)
             with self.db.connection() as connection:

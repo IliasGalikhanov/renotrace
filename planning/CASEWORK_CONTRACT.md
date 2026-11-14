@@ -1,6 +1,6 @@
 # Stage 7: question history and calculation snapshots
 
-Contract `guest-review/2`, API version `0.7.0`. Extends the [guest contract](GUEST_REVIEW_CONTRACT.md). No accounts, payments, email delivery, longer retention, financial agreement actions or PDF export. Existing normalization and ledger remain the only financial calculation path.
+Stage 7 introduced contract `guest-review/2`, API version `0.7.0`. Stage 8 adds [explicit rechecks and invoice comparisons](RECHECK_CONTRACT.md) with `guest-review/3` / API `0.8.0`; old snapshots retain their original contract. Extends the [guest contract](GUEST_REVIEW_CONTRACT.md). No accounts, payments, email delivery, longer retention, financial agreement actions or PDF export. Existing normalization and ledger remain the only financial calculation path.
 
 ## Actual owner-scoped routes
 
@@ -53,4 +53,4 @@ Capacity per temporary project: 20 saved calculations, 300 cards, 200 idempotent
 
 All entities inherit the original project expiry, 24 hours from creation. Discussion never renews it. Server expiry checks deny access immediately; cleanup cascades all new tables and uses the existing retryable object deletion outbox. No persistent files or new storage services are added to Render. Browser-local copies already downloaded cannot be recalled.
 
-No semantic analysis of reply text is claimed. Supporting sources are checked explicitly by the user; OCR and manual correction are not independent document authentication. No automatic document matching, corrected invoice comparison, contract renegotiation or guarantee of payment safety. Missing questions alone do not establish payment conditions.
+No semantic analysis of reply text is claimed. Supporting sources are checked explicitly by the user; OCR and manual correction are not independent document authentication. Stage 8 provides explicit corrected-invoice comparison; it does not automatically confirm document matches, renegotiate contracts or guarantee payment safety. Missing questions alone do not establish payment conditions.

@@ -102,6 +102,12 @@ def observation(
         ),
         "agreement": command.agreement_id if command else None,
         "request": command.request_id if command and "requested_now_cents" in affects else None,
+        "invoices": [i.model_dump(mode="json") for i in command.invoices if i.file_id in file_ids]
+        if command
+        else [],
+        "request_versions": [v.model_dump(mode="json") for v in command.request_versions]
+        if command and "requested_now_cents" in affects
+        else [],
         "links": sorted((link.kind, link.from_id, link.to_id) for link in command.links)
         if command
         else [],

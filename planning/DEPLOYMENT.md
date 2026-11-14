@@ -4,6 +4,8 @@ See [stage 9 report](STAGE_9_REPORT.md) for the latest release gate. Stage 5 bel
 
 ## Stage 9 PDF release
 
+Published application SHA: `bd8e80ceb704f563fa7290c1c836a8ab2b0ee296`. Frontend: <https://renotrace.vercel.app/review>; backend: <https://renotrace-api.onrender.com>. The owner confirmed Render Live and Vercel Ready on 2026-11-15. OpenAPI reports `0.9.0`; public PDF acceptance and its verification boundaries are recorded in the [stage 9 release report](STAGE_9_REPORT.md#release-gate). Later report/screenshot commits do not change this deployed runtime. Existing Vercel Hobby, Render Free and Supabase Free resources are reused without paid additions.
+
 No schema migration is needed: the existing project-owned single-use tickets table also carries PDF-only tickets. No new secret, service or paid resource is needed. The locked production dependencies now include ReportLab; the backend package includes the font/license. Keep existing `BACKEND_URL`, `FRONTEND_ORIGIN`, host/port and health checks. PDF binary responses go directly from FastAPI to the browser; the Vercel BFF handles only the small owner-authorized ticket response.
 
 After CI passes, deploy the exact checked SHA to Render first. Verify `/healthz`, OpenAPI `0.9.0`, `POST /api/guest/projects/{project_id}/exports` and `GET /api/guest/export`; then deploy the same SHA to Vercel using existing production variables. Keep auto-deploy disabled. Run the public guest flow with real downloads at all three widths and the existing demo regression, using the commands in the [stage 9 report](STAGE_9_REPORT.md#reproduce-checks). Inspect the downloaded PDF contents and rendered pages, not only HTTP status. Do not set `GUEST_LOCAL_DB` for remote testing.

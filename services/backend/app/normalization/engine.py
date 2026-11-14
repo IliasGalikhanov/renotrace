@@ -25,7 +25,7 @@ from .models import (
 )
 from .validation import validate_history
 
-NORMALIZATION_VERSION = "normalization-0.1.0"
+NORMALIZATION_VERSION = "normalization-0.1.1"
 TERMS: tuple[Metric, ...] = ("commitment_total_cents", "remaining_commitment_cents")
 CASH: tuple[Metric, ...] = ("net_paid_cents", "remaining_commitment_cents")
 REQUEST: tuple[Metric, ...] = ("requested_now_cents",)
@@ -412,6 +412,20 @@ class _Context:
             )
         return base, tuple(sorted(adjustments, key=lambda row: row.id))
 
+    def transaction_question(self, code: str, record_ids: tuple[str, ...], message: str) -> None:
+        affected = set(record_ids)
+        self.question(
+            code,
+            record_ids,
+            message,
+            CASH,
+            decision_ids=tuple(
+                decision.id
+                for decision in self.history.decisions
+                if affected.intersection(self.scope(decision))
+            ),
+        )
+
     def cash(self, candidates: list[FinancialRecord]) -> tuple[CashEvent, ...]:
         groups: dict[tuple[str, ...], list[Cash]] = defaultdict(list)
         identity: tuple[str, ...]
@@ -432,12 +446,11 @@ class _Context:
                 else set()
             )
             if unresolved:
-                self.question(
+                self.transaction_question(
                     "TRANSACTION_VERSION_UNRESOLVED",
                     tuple(unresolved | {row.id for row in group}),
                     "Resolve the ambiguous revisions of this bank operation "
                     "before using another import.",
-                    CASH,
                 )
                 for row in group:
                     self.disposition(row, "UNRESOLVED_TRANSACTION")
@@ -470,6 +483,13 @@ class _Context:
                 continue
             usable = [self.usable(row) for row in group]
             if not all(usable):
+                if any(usable):
+                    self.transaction_question(
+                        "TRANSACTION_REVIEW_CONFLICT",
+                        tuple(row.id for row in group),
+                        "Confirmations of this bank operation disagree or are unresolved. "
+                        "Clarify them before counting the payment.",
+                    )
                 for row, accepted in zip(group, usable, strict=True):
                     if accepted:
                         self.disposition(row, "UNRESOLVED_TRANSACTION")

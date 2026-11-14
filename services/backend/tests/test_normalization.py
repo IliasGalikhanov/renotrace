@@ -29,7 +29,20 @@ def row(data, id):
 
 def run(data):
     normalized = normalize(HistoryInput.model_validate_json(json.dumps(data)))
+    assert_unresolved_cash_has_question(normalized)
     return normalized, calculate(normalized.ledger_input)
+
+
+def assert_unresolved_cash_has_question(normalized):
+    metrics = {"net_paid_cents", "remaining_commitment_cents"}
+    for entry in normalized.excluded:
+        if entry.reason == "UNRESOLVED_TRANSACTION":
+            assert normalized.incomplete
+            assert metrics <= set(normalized.incomplete_metrics)
+            assert any(
+                entry.record.id in question.record_ids and metrics <= set(question.affects)
+                for question in normalized.questions
+            ), f"Unresolved cash {entry.record.id} has no question covering paid and remaining"
 
 
 def codes(result):
@@ -749,3 +762,104 @@ def test_ambiguous_cash_revision_cannot_be_bypassed_by_another_bank_import(selec
     normalized, result = run(data)
     assert result.net_paid_cents == 0
     assert "TRANSACTION_VERSION_UNRESOLVED" in codes(normalized)
+
+
+@pytest.mark.parametrize("explicit_accept", [False, True])
+def test_rejected_bank_confirmation_makes_entire_group_provisional(explicit_accept):
+    data = payload("FIN-08")
+    if explicit_accept:
+        decision(data, "confirm_semantics", "import-a", answer="accept")
+    decision(data, "confirm_semantics", "import-b", answer="reject")
+    normalized, result = run(data)
+    assert result.net_paid_cents == 0
+    assert result.remaining_commitment_cents == 1_000_000
+    question = next(q for q in normalized.questions if q.code == "TRANSACTION_REVIEW_CONFLICT")
+    assert question.record_ids == ("import-a", "import-b")
+    assert set(question.decision_ids) == {d["id"] for d in data["decisions"]}
+    assert set(question.affects) == {"net_paid_cents", "remaining_commitment_cents"}
+    assert {entry.record.id: entry.reason for entry in normalized.excluded} == {
+        "import-a": "UNRESOLVED_TRANSACTION",
+        "import-b": "REJECTED_BY_USER",
+    }
+
+
+def test_payment_review_conflict_is_independent_of_record_and_decision_order():
+    data = payload("FIN-08")
+    decision(data, "confirm_semantics", "import-a", answer="accept")
+    decision(data, "confirm_semantics", "import-b", answer="reject")
+    expected = run(data)
+    data["records"].reverse()
+    data["decisions"].reverse()
+    assert run(data) == expected
+
+
+def test_agreeing_confirmations_clear_question_and_count_payment_once():
+    data = payload("FIN-08")
+    decision(data, "confirm_semantics", "import-a", answer="accept")
+    decision(data, "confirm_semantics", "import-b", answer="reject")
+    assert run(data)[0].incomplete
+    # A new case revision invalidates the old choices; explicitly reconfirm both.
+    data["case_revision"] += 1
+    for id in ("import-a", "import-b"):
+        decision(data, "confirm_semantics", id, answer="accept")
+    normalized, result = run(data)
+    assert result.net_paid_cents == 300_000
+    assert result.remaining_commitment_cents == 700_000
+    assert len(normalized.ledger_input.cash_events) == 1
+    assert not normalized.incomplete
+    assert not normalized.questions
+    assert not normalized.incomplete_metrics
+
+
+def test_all_confirmations_deliberately_rejected_are_not_an_unresolved_conflict():
+    data = payload("FIN-08")
+    for id in ("import-a", "import-b"):
+        decision(data, "confirm_semantics", id, answer="reject")
+    normalized, result = run(data)
+    assert result.net_paid_cents == 0
+    assert result.remaining_commitment_cents == 1_000_000
+    assert {entry.reason for entry in normalized.excluded} == {"REJECTED_BY_USER"}
+    assert not normalized.incomplete
+    assert not normalized.questions
+
+
+@pytest.mark.parametrize("review", ["unreviewed", "stale"])
+def test_unreviewed_or_stale_confirmation_keeps_group_question(review):
+    data = payload("FIN-08")
+    decision(data, "confirm_semantics", "import-a", answer="accept")
+    if review == "unreviewed":
+        row(data, "import-b")["review"] = {}
+    else:
+        decision(data, "confirm_semantics", "import-b", answer="accept", basis_revision=0)
+    normalized, result = run(data)
+    assert result.net_paid_cents == 0
+    question = next(q for q in normalized.questions if q.code == "TRANSACTION_REVIEW_CONFLICT")
+    assert question.record_ids == ("import-a", "import-b")
+    assert set(question.decision_ids) == {d["id"] for d in data["decisions"]}
+    assert ("STALE_DECISION" if review == "stale" else "SEMANTIC_REVIEW_REQUIRED") in codes(
+        normalized
+    )
+
+
+@given(
+    st.tuples(
+        *[st.sampled_from(["accept", "reject", "unknown", "unreviewed", "stale", "conflicting"])]
+        * 2
+    )
+)
+def test_unresolved_transaction_invariant_across_confirmation_combinations(states):
+    data = payload("FIN-08")
+    for id, state in zip(("import-a", "import-b"), states, strict=True):
+        if state == "unreviewed":
+            row(data, id)["review"] = {}
+        elif state == "stale":
+            decision(data, "confirm_semantics", id, answer="accept", basis_revision=0)
+        elif state == "conflicting":
+            decision(data, "confirm_semantics", id, answer="accept")
+            decision(data, "confirm_semantics", id, answer="reject")
+        else:
+            decision(data, "confirm_semantics", id, answer=state)
+    expected = run(data)  # applies the common unresolved-cash invariant
+    data["records"].reverse()
+    data["decisions"].reverse()
+    assert run(data) == expected

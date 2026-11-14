@@ -12,7 +12,7 @@ No new hosting service, paid resource, account system, outgoing message, financi
 
 Local development checks:
 
-- Python domain/API/CLI suite: **380 passed**, ledger/normalization/demo coverage **99.86%**. Windows TestClient requires the normal unrestricted local process environment; a sandboxed attempt stalled and was stopped, then the full suite passed.
+- Python domain/API/CLI suite: **381 passed**, ledger/normalization/demo coverage **99.86%**. Windows TestClient requires the normal unrestricted local process environment; a sandboxed attempt stalled and was stopped, then the full suite passed. Final review added a regression for a negative USD 3,000.45 refund: prepared clarification text preserves exact signed cents and uses a neutral counterparty question.
 - Real local PostgreSQL/private S3/Tesseract integration: **17 passed**, including financial independence of replies/decisions, same-key retries, frozen result reads, ownership isolation, additive migration, API restart recovery and deletion/expiry cascades.
 - Guest browser suite: **9 passed** at 360/768/1440 px, including the new history path and all existing guest journeys. A lost reply response after server commit is retried without duplication. The first test iteration exposed an overly strict label locator; selecting the named accessible combobox fixed the test.
 - Existing demo browser suite: **34 passed, 2 intentionally skipped** duplicate viewport cold-start runs. The real 55-second backend-start test passed. Run browser suites serially because they share the Playwright output directory.

@@ -107,15 +107,18 @@ def observation(
         else [],
     }
     prompt = message + " Please explain and identify the supporting document or page, if available."
-    if code == "UNRESOLVED_RECIPIENT" and len(related) == 1:
+    if code == "UNRESOLVED_RECIPIENT" and len(related) == 1 and related[0].kind == "cash":
         row = related[0]
         amount = (
             "this transfer"
             if row.amount_cents is None
-            else (f"the USD {row.amount_cents // 100:,}.{abs(row.amount_cents) % 100:02d} transfer")
+            else (
+                f"the USD {'-' if row.amount_cents < 0 else ''}"
+                f"{abs(row.amount_cents) // 100:,}.{abs(row.amount_cents) % 100:02d} transfer"
+            )
         )
         prompt = (
-            f"Who received {amount} dated {row.effective_date.isoformat()}? "
+            f"Who is the counterparty for {amount} dated {row.effective_date.isoformat()}? "
             "Please explain its relationship to this renovation and identify supporting evidence."
         )
     values = result.calculation.model_dump(mode="json")

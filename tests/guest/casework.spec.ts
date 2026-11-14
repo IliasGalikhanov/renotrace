@@ -143,7 +143,9 @@ test("persistent question, text reply, decisions, frozen calculations and reload
     await fs.mkdir("planning/screenshots/stage7", { recursive: true });
     await page
       .getByRole("region", { name: "Historical calculation" })
-      .evaluate((el) => el.scrollIntoView({ block: "start" }));
+      .evaluate((el) =>
+        el.scrollIntoView({ block: "start", behavior: "instant" }),
+      );
     await page.screenshot({
       path: `planning/screenshots/stage7/snapshot-${testInfo.project.name}.png`,
     });

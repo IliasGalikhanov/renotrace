@@ -151,3 +151,16 @@ def test_checked_payment_condition_has_specific_evidence_without_cash_record():
     )
     assert card.evidence_state == "explained_verified"
     assert result.conditions[0].source_id in card.verified_source_refs
+
+
+def test_refund_question_preserves_negative_cents_exactly():
+    project, command, _, _, _ = ambiguous()
+    row = next(r for r in command.records if r.kind == "payment")
+    row.kind = "refund"
+    row.amount = "-3000.45"
+    save(project, command)
+    cards = reconcile(project, result_for(project), [])
+    card = next(c for c in cards if c.observation.code == "UNRESOLVED_RECIPIENT")
+    assert "USD -3,000.45 transfer" in card.observation.contractor_question
+    assert "counterparty" in card.observation.contractor_question
+    assert list(card.observation.amounts_cents.values()) == [-300045]

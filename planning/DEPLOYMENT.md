@@ -2,6 +2,10 @@
 
 See STAGE_5_REPORT.md for the observed deployment status and released revisions. The app serves only bundled synthetic data. It is not a private case service, and has no persistence or upload route.
 
+Production frontend: [renotrace.vercel.app](https://renotrace.vercel.app)
+
+Backend: [renotrace-api.onrender.com](https://renotrace-api.onrender.com/healthz)
+
 ## Local use
 
 Install with `scripts/setup.ps1` on Windows or `uv sync --locked` plus `npm ci` on Linux/macOS. Python 3.13.18, Node 24.11.0 and pinned package lockfiles are used for validation.
@@ -26,8 +30,8 @@ Open http://127.0.0.1:3000. `BACKEND_URL` is read by the Next.js server, not the
 Build context is the **repository root**:
 
 ```sh
-docker build -f infra/backend.Dockerfile -t renotrace-demo:stage4 .
-docker run --rm --name renotrace-demo -e PORT=8000 -p 8000:8000 renotrace-demo:stage4
+docker build -f infra/backend.Dockerfile -t renotrace-demo:stage5 .
+docker run --rm --name renotrace-demo -e PORT=8000 -p 8000:8000 renotrace-demo:stage5
 ```
 
 The Dockerfile pins Python 3.13.18 and uv 0.13.8, installs application dependencies using `uv sync --locked --no-dev --no-editable`, packages inline samples, and runs as UID 10001. No Node runtime, database, secrets or volume is needed. `.dockerignore` excludes local environments, credentials, browser artifacts and private runtime data. Host is `0.0.0.0`; use the hosting platform's `PORT` variable (default 8000). Configure its HTTP health probe to `/healthz`. Docker also declares a localhost health check using the same port.
@@ -35,9 +39,9 @@ The Dockerfile pins Python 3.13.18 and uv 0.13.8, installs application dependenc
 After hosting the container on a platform you choose, verify:
 
 ```sh
-curl --fail https://YOUR-BACKEND/healthz
-curl --fail https://YOUR-BACKEND/api/demo/scenarios
-curl --fail https://YOUR-BACKEND/api/demo/scenarios/FIN-11
+curl --fail https://renotrace-api.onrender.com/healthz
+curl --fail https://renotrace-api.onrender.com/api/demo/scenarios
+curl --fail https://renotrace-api.onrender.com/api/demo/scenarios/FIN-11
 ```
 
 The public backend accepts only these synthetic-demo actions. Private routes are absent. Provider request/concurrency limits and TLS are hosting settings; application rate limiting is not implemented in this stage. No browser CORS configuration is needed because browsers call the same-origin Next BFF.
@@ -49,7 +53,7 @@ Local Docker Engine was unavailable during development. The Linux CI job builds 
 1. Import the existing IliasGalikhanov/renotrace repository, without cloning it into a new repository. Select **Next.js**, Root Directory **apps/web**, Node **24.x**.
 2. Enable inclusion of source files outside the root directory so npm workspaces and the root lockfile are available.
 3. `apps/web/vercel.json` sets install command `cd ../.. && npm ci`, build command `cd ../.. && npm run build`, and output directory `.next` relative to the frontend root.
-4. Set server environment variable `BACKEND_URL=https://YOUR-BACKEND` for the intended Preview/Production environment. Do not prefix it with `NEXT_PUBLIC_`. Use a reachable HTTPS origin without `/api/demo` appended; loopback points to Vercel itself, not your computer.
+4. Set server environment variable `BACKEND_URL=https://renotrace-api.onrender.com` for the intended Preview/Production environment. Do not prefix it with `NEXT_PUBLIC_`. Use a reachable HTTPS origin without `/api/demo` appended; loopback points to Vercel itself, not your computer.
 5. After deployment, exercise Try sample → FIN-16 → The contractor → Another recipient → Reset. Check $7,000 → $5,000 → $7,000 and the restored provisional status.
 
 The BFF needs a running Node/serverless runtime; this is not a static export. A missing backend setting returns 503, an unavailable backend 502. Those errors are surfaced with retry in the UI. Use the production domain for anonymous access; preview/deployment URLs may require Vercel Authentication.
@@ -85,7 +89,7 @@ BFF upstream timeout is 20 seconds, Vercel `maxDuration` is 30 seconds. Browser 
 ## Public verification without local servers
 
 ```powershell
-$env:RENOTRACE_BASE_URL = 'https://YOUR-PRODUCTION-FRONTEND'
+$env:RENOTRACE_BASE_URL = 'https://renotrace.vercel.app'
 $env:RENOTRACE_CAPTURE_DIR = 'planning/screenshots/stage5'
 npm run test:remote
 ```
@@ -98,8 +102,10 @@ For a true sleep check, close demo tabs and stop tests for more than 15 minutes;
 
 1. Commit/push; require both `RenoTrace checks / verify` matrix jobs to succeed for that exact SHA, including Linux container smoke. Record the previously live frontend/backend revisions and deployment IDs.
 2. Render: **Manual Deploy → Deploy a specific commit**, enter the checked SHA. Wait for Live; verify health, scenario list, FIN-11 and FIN-16 POST. Keep auto-deploy off.
-3. Vercel: **Deployments → Create Deployment**, select the checked commit, then deploy/promote to Production with `BACKEND_URL` set. Git-triggered deployments are disabled in `apps/web/vercel.json` (`git.deploymentEnabled: false`). Push runs CI but does not release. Manual deployment is an operator-controlled CI gate, not an automated integration.
+3. Vercel: **Deployments → Create Deployment**, paste the full checked SHA in **Branch, Commit, or URL**, verify the resolved commit and **Production**, then choose **Deploy to Production** with `BACKEND_URL` set. Git-triggered deployments are disabled in `apps/web/vercel.json` (`git.deploymentEnabled: false`). Push runs CI but does not release. Manual deployment is an operator-controlled CI gate, not an automated integration.
 4. Run `npm run test:remote` on the stable production domain in clean contexts. Record the tested SHA and results. A docs-only follow-up commit does not automatically change the live revision.
 5. Roll back frontend using the previous successful production deployment / **Instant Rollback** where available; otherwise redeploy the previous known-good commit. Render Free retains only its two most recent previous deploys for rollback; alternatively deploy the previous known-good SHA manually. Repeat public checks. Restore environment/config changes separately: code rollback does not restore account settings.
 
 References: [Vercel Git settings](https://vercel.com/docs/project-configuration/git-configuration), [function duration](https://vercel.com/docs/functions/configuring-functions/duration), [Render deploys](https://render.com/docs/deploys), [Render rollbacks](https://render.com/docs/rollbacks).
+
+Observed project settings: Vercel `lias5/renotrace`, project `prj_Vu9x6NyLYKqrVPomRi339hmaN5nF`, Root Directory `apps/web`, include files outside root enabled, Basic build machine, on-demand concurrent builds disabled. Set **Node 24.x explicitly**; the platform default may select a newer major despite the root package engine range. Render `renotrace-api`, service `srv-dbs9iet6e07s7397sbog`, Ohio, Free, Auto-Deploy Off, `/healthz`, runtime bound to `0.0.0.0:10000` from the injected PORT. GitHub App access was granted only to RenoTrace with user confirmation.

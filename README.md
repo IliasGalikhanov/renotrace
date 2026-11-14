@@ -4,19 +4,21 @@
 
 RenoTrace traces a renovation invoice back to recorded terms, changes, and payments. The requested amount, calculated remainder, payment conditions, and unresolved questions are separate concepts.
 
-## Current status: stage 4
+## Current status: stage 5
 
 Implemented: an interactive English synthetic demo, a restricted public FastAPI demo API, a server-side Next.js BFF, a pure Python ledger, and a pure structured-history normalization module. Normalization selects confirmed estimate versions, removes included changes, filters payments/refunds, reconciles bank identities, applies explicit user decisions, and returns unresolved questions and provenance. Stage 3 adds typed billing, comparable cumulative valuations, targeted credit notes, explicit partial payment/refund allocations, invoice balances and unallocated cash. Both domain modules run without a browser, AI, database, or network. The demo calls them on the server for every recalculation; browser code only formats returned amounts.
 
-Not implemented: raw document extraction/OCR, inferred document matching, authentication, persistence, worker queue, exports, checkout, or hosted deployment. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The demo runs without registration and never saves visitor decisions. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
+Not implemented: raw document extraction/OCR, inferred document matching, authentication, persistence, worker queue, exports, or checkout. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The demo runs without registration and never saves visitor decisions. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
 
 ## Try the interactive demo
 
-Start the backend and frontend using the commands below, then open [localhost:3000](http://127.0.0.1:3000) and select **Try sample**. FIN-01 explains the $800 credit and $4,700 remainder. FIN-16 lets you assign the unknown $2,000 transfer: the remainder changes **$7,000 → $5,000 → $7,000**; “I don't know” restores the provisional state. FIN-11 traces the $8,500 cumulative increment and $10,500 open invoice balances.
+Public site: **[renotrace.vercel.app](https://renotrace.vercel.app)**. No account needed. Backend: [health endpoint](https://renotrace-api.onrender.com/healthz). The free backend sleeps when idle; the first calculation may take about a minute, with bounded retries for up to three minutes. This is a synthetic demo without saved decisions.
+
+For local development, start the backend and frontend using the commands below, then open [localhost:3000](http://127.0.0.1:3000) and select **Try sample**. FIN-01 explains the $800 credit and $4,700 remainder. FIN-16 lets you assign the unknown $2,000 transfer: the remainder changes **$7,000 → $5,000 → $7,000**; “I don't know” restores the provisional state. FIN-11 traces the $8,500 cumulative increment and $10,500 open invoice balances.
 
 Each amount can be opened to inspect participating records and inline synthetic source excerpts. Conditions without supplied evidence display **Unknown**. Reset/reload discards decisions; two visitors do not share state. Loading hides old figures, and errors have retry controls.
 
-See the [actual demo API contract](planning/DEMO_API_CONTRACT.md), [exported implemented OpenAPI](contracts/demo.openapi.json), [deployment preparation](planning/DEPLOYMENT.md) and [stage 4 report with screenshots](planning/STAGE_4_REPORT.md). The original private OpenAPI remains a design document, not implemented routes.
+See the [actual demo API contract](planning/DEMO_API_CONTRACT.md), [exported implemented OpenAPI](contracts/demo.openapi.json), [deployment and rollback runbook](planning/DEPLOYMENT.md), [stage 5 deployment report](planning/STAGE_5_REPORT.md) and [stage 4 report with screenshots](planning/STAGE_4_REPORT.md). The original private OpenAPI remains a design document, not implemented routes.
 
 ## Install on Windows
 

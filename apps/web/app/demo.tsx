@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Action, Answer, Demo, Scenario, Trace } from "./demo-types";
+import { requestDemo } from "./demo-request";
 
 const money = (cents: number | null) =>
   cents === null
@@ -124,6 +125,7 @@ export default function DemoExperience() {
   const [demo, setDemo] = useState<Demo | null>(null);
   const [options, setOptions] = useState<Demo["allowed_actions"]>([]);
   const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(1);
   const [error, setError] = useState("");
   const sequence = useRef(0);
   const controller = useRef<AbortController | null>(null);
@@ -140,8 +142,9 @@ export default function DemoExperience() {
     setDemo(null);
     setError("");
     setLoading(true);
+    setAttempt(1);
     try {
-      const response = await fetch(
+      const response = await requestDemo(
         `/api/demo/scenarios/${id}${nextActions.length ? "/calculate" : ""}`,
         {
           method: nextActions.length ? "POST" : "GET",
@@ -150,7 +153,10 @@ export default function DemoExperience() {
             ? JSON.stringify({ actions: nextActions })
             : undefined,
           cache: "no-store",
-          signal: requestController.signal,
+        },
+        requestController.signal,
+        (number) => {
+          if (generation === sequence.current) setAttempt(number);
         },
       );
       if (!response.ok)
@@ -185,21 +191,25 @@ export default function DemoExperience() {
         setLoading(false);
     }
   }, []);
-  const loadCatalog = useCallback(async (signal?: AbortSignal) => {
-    setCatalogError(false);
-    try {
-      const response = await fetch("/api/demo/scenarios", {
-        signal,
-        cache: "no-store",
-      });
-      if (!response.ok) throw new Error();
-      const items: Scenario[] = await response.json();
-      if (!Array.isArray(items) || !items.length) throw new Error();
-      if (!signal?.aborted) setScenarios(items);
-    } catch {
-      if (!signal?.aborted) setCatalogError(true);
-    }
-  }, []);
+  const loadCatalog = useCallback(
+    async (signal = new AbortController().signal) => {
+      setCatalogError(false);
+      try {
+        const response = await requestDemo(
+          "/api/demo/scenarios",
+          { cache: "no-store" },
+          signal,
+        );
+        if (!response.ok) throw new Error();
+        const items: Scenario[] = await response.json();
+        if (!Array.isArray(items) || !items.length) throw new Error();
+        if (!signal?.aborted) setScenarios(items);
+      } catch {
+        if (!signal?.aborted) setCatalogError(true);
+      }
+    },
+    [],
+  );
   useEffect(() => {
     const catalogController = new AbortController();
     void loadCatalog(catalogController.signal);
@@ -270,7 +280,7 @@ export default function DemoExperience() {
       </div>
       <div role="status" aria-live="polite" className="live-status">
         {loading
-          ? "Recalculating sample… Previous figures are hidden until this decision is calculated."
+          ? `Recalculating sample… The free demo service may need up to 3 minutes to wake up. Attempt ${attempt} of 4. Previous figures are hidden until this decision is calculated.`
           : error
             ? "Calculation unavailable."
             : "Calculation updated from the sample records."}

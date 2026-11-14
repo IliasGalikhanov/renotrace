@@ -93,17 +93,29 @@ test("two browser contexts do not share decisions", async ({
 test("failed calculation hides old figures and retries the same answer", async ({
   page,
 }) => {
+  await page.clock.install();
   await open(page);
   await choose(page, "FIN-16", "$7,000");
-  await page.route("**/api/demo/scenarios/FIN-16/calculate", (route) =>
-    route.fulfill({ status: 502, json: { detail: "Unavailable" } }),
-  );
+  let attempts = 0;
+  await page.route("**/api/demo/scenarios/FIN-16/calculate", (route) => {
+    attempts++;
+    return route.fulfill({ status: 502, json: { detail: "Unavailable" } });
+  });
   await page
     .getByRole("radio", { name: "The contractor", exact: true })
     .check();
+  for (let attempt = 2; attempt <= 4; attempt++) {
+    await expect(page.getByRole("status")).toContainText(
+      `Attempt ${attempt} of 4`,
+    );
+    await expect(remaining(page)).toHaveCount(0);
+    await page.clock.fastForward(20_000);
+  }
   await expect(page.locator(".error[role=alert]")).toContainText(
     "Calculation unavailable",
   );
+  await page.clock.fastForward(180_000);
+  expect(attempts).toBe(4);
   await expect(remaining(page)).toHaveCount(0);
   await page.unroute("**/api/demo/scenarios/FIN-16/calculate");
   await page.getByRole("button", { name: "Retry calculation" }).click();
@@ -114,7 +126,7 @@ test("catalog failure and malformed result can be retried", async ({
   page,
 }) => {
   await page.route("**/api/demo/scenarios", (route) =>
-    route.fulfill({ status: 503, json: {} }),
+    route.fulfill({ status: 400, json: {} }),
   );
   await page.route("**/api/demo/scenarios/FIN-01", (route) =>
     route.fulfill({ status: 200, json: { synthetic: false } }),
@@ -131,6 +143,33 @@ test("catalog failure and malformed result can be retried", async ({
   await page.getByRole("button", { name: "Retry calculation" }).click();
   await expect(page.getByRole("button", { name: /FIN-16/ })).toBeVisible();
   await expect(remaining(page).locator(".amount")).toHaveText("$4,700");
+});
+
+test("cold-start retries are bounded and a changed answer cancels the old retry", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await open(page);
+  await choose(page, "FIN-16", "$7,000");
+  let contractorRequests = 0;
+  await page.route("**/api/demo/scenarios/FIN-16/calculate", async (route) => {
+    if (route.request().postDataJSON().actions[0].answer === "contractor") {
+      contractorRequests++;
+      await route.fulfill({ status: 503, json: {} });
+    } else await route.continue();
+  });
+  await page
+    .getByRole("radio", { name: "The contractor", exact: true })
+    .check();
+  await expect(page.getByRole("status")).toContainText("Attempt 2 of 4");
+  await expect(remaining(page)).toHaveCount(0);
+  await page
+    .getByRole("radio", { name: "Another recipient", exact: true })
+    .check();
+  await expect(remaining(page).locator(".amount")).toHaveText("$7,000");
+  await page.clock.fastForward(180_000);
+  expect(contractorRequests).toBe(1);
+  await expect(remaining(page)).not.toContainText("Provisional");
 });
 
 test("late replies cannot replace a newer decision even without transport abort", async ({

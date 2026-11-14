@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 const headers = { "Cache-Control": "no-store" };
 
 async function proxy(
@@ -70,7 +71,7 @@ async function proxy(
         },
         body,
         cache: "no-store",
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(20_000),
         redirect: "error",
       },
     );

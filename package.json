@@ -17,7 +17,8 @@
     "typecheck": "npm run typecheck --workspace @renotrace/web && tsc -p tsconfig.e2e.json",
     "test:e2e": "playwright test",
     "test:remote": "playwright test --config playwright.remote.config.ts",
-    "format:check": "prettier --check \"apps/web/app/**/*.{ts,tsx,css}\" tests/e2e playwright.config.ts playwright.remote.config.ts tools/e2e-api.mjs"
+    "test:guest": "playwright test --config playwright.guest.config.ts",
+    "format:check": "prettier --check \"apps/web/app/**/*.{ts,tsx,css}\" tests/e2e tests/guest playwright.config.ts playwright.remote.config.ts playwright.guest.config.ts tools/e2e-api.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",

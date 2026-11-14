@@ -1,0 +1,37 @@
+name: Expire guest reviews
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 * * * *"
+
+permissions: {}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Remove expired reviews and retry the private-object deletion outbox
+        env:
+          REVIEW_CLEANUP_SECRET: ${{ secrets.REVIEW_CLEANUP_SECRET }}
+        run: |
+          python - <<'PY'
+          import os, time, urllib.request
+          secret = os.environ.get('REVIEW_CLEANUP_SECRET', '')
+          if len(secret) < 32:
+              raise SystemExit('Configure the repository cleanup secret before enabling guest reviews')
+          for attempt in range(2):
+              try:
+                  request = urllib.request.Request(
+                      'https://renotrace-api.onrender.com/api/guest/maintenance/cleanup',
+                      data=b'', method='POST', headers={'X-Cleanup-Secret': secret})
+                  with urllib.request.urlopen(request, timeout=120) as response:
+                      assert response.status == 204
+                  print('Expired review cleanup completed')
+                  break
+              except Exception:
+                  if attempt:
+                      raise SystemExit('Cleanup failed; inspect service availability, without logging credentials')
+                  time.sleep(20)
+          PY

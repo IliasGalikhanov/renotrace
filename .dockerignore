@@ -26,4 +26,5 @@ playwright-report
 test-results
 uploads
 data
+backups
 *.log

@@ -4,8 +4,14 @@ version = "0.1.0"
 description = "RenoTrace deterministic ledger and FastAPI foundation"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+  "boto3==1.44.3",
   "fastapi==0.162.7",
+  "httpx2==2.16.0",
+  "pillow==13.0.0",
+  "psycopg[binary,pool]==3.3.9",
   "pydantic==2.14.3",
+  "pypdf==7.1.0",
+  "pypdfium2==5.15.2",
   "uvicorn==0.54.0",
 ]
 
@@ -28,6 +34,7 @@ dev = [
   "httpx2==2.16.0",
   "ruff==0.17.5",
   "mypy==2.4.1",
+  "reportlab==5.1.0",
 ]
 
 [tool.pytest.ini_options]
@@ -37,7 +44,7 @@ addopts = "-ra --strict-markers --basetemp=.pytest_tmp"
 [tool.ruff]
 target-version = "py313"
 line-length = 100
-include = ["services/backend/**/*.py", "tools/smoke_test.py"]
+include = ["services/backend/**/*.py", "tools/smoke_test.py", "tools/*guest*.py", "tools/snapshot_stage5_release.py", "tests/integration/*.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "RenoTrace demo API",
-    "version": "0.4.0"
+    "title": "RenoTrace API",
+    "version": "0.6.0"
   },
   "paths": {
     "/api/demo/scenarios": {
@@ -119,6 +119,333 @@
           },
           "404": {
             "description": "Unknown scenario"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/session": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Start",
+        "description": "For the trusted BFF: move token to a Secure HttpOnly cookie; never return it to JS.",
+        "operationId": "start_api_guest_session_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/guest/projects/{project_id}": {
+      "get": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Project",
+        "operationId": "project_api_guest_projects__project_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Delete",
+        "operationId": "delete_api_guest_projects__project_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/review": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Review",
+        "operationId": "review_api_guest_projects__project_id__review_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/projects/{project_id}/tickets": {
+      "post": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Ticket",
+        "operationId": "ticket_api_guest_projects__project_id__tickets_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/transfer": {
+      "get": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Download",
+        "description": "Single-use, file-scoped ticket; access is rechecked after deletion/expiry.",
+        "operationId": "download_api_guest_transfer_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {},
+              "image/png": {},
+              "image/jpeg": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "guest reviews"
+        ],
+        "summary": "Upload",
+        "description": "Single-use, upload-only ticket. Actual format and all quotas are checked server-side.",
+        "operationId": "upload_api_guest_transfer_put",
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/guest/maintenance/cleanup": {
+      "post": {
+        "tags": [
+          "guest reviews",
+          "maintenance"
+        ],
+        "summary": "Cleanup",
+        "operationId": "cleanup_api_guest_maintenance_cleanup_post",
+        "parameters": [
+          {
+            "name": "x-cleanup-secret",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Cleanup-Secret"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -833,6 +1160,116 @@
         ],
         "title": "BillingCredit"
       },
+      "Candidate": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "file_id": {
+            "type": "string",
+            "title": "File Id"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "agreement",
+              "adjustment",
+              "payment_request",
+              "payment",
+              "refund",
+              "condition",
+              "unknown"
+            ],
+            "title": "Kind"
+          },
+          "original_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Amount"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "snippet": {
+            "type": "string",
+            "title": "Snippet"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "pending",
+              "scheduled",
+              "failed",
+              "reversed"
+            ],
+            "title": "State",
+            "default": "pending"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
+          "transaction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "file_id",
+          "page",
+          "kind",
+          "snippet"
+        ],
+        "title": "Candidate"
+      },
       "Cash": {
         "properties": {
           "id": {
@@ -1414,6 +1851,132 @@
         ],
         "title": "Disposition"
       },
+      "Document": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "checksum": {
+            "type": "string",
+            "title": "Checksum"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "media_type": {
+            "type": "string",
+            "title": "Media Type"
+          },
+          "page_count": {
+            "type": "integer",
+            "title": "Page Count"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/Page"
+            },
+            "type": "array",
+            "title": "Pages"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "processing",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "default": "queued"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "checksum",
+          "size",
+          "media_type",
+          "page_count"
+        ],
+        "title": "Document"
+      },
+      "Evidence": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "title",
+          "text",
+          "origin"
+        ],
+        "title": "Evidence"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1956,6 +2519,36 @@
         ],
         "title": "Link"
       },
+      "LinkChoice": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "supersedes",
+              "includes_adjustment"
+            ],
+            "title": "Kind"
+          },
+          "from_id": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "From Id"
+          },
+          "to_id": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "To Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "from_id",
+          "to_id"
+        ],
+        "title": "LinkChoice"
+      },
       "NormalizationResult": {
         "properties": {
           "normalization_version": {
@@ -2073,6 +2666,45 @@
           "applied_decisions"
         ],
         "title": "NormalizationResult"
+      },
+      "Page": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "pdf_text",
+              "tesseract"
+            ],
+            "title": "Method"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "number",
+          "text",
+          "method"
+        ],
+        "title": "Page"
       },
       "PaymentAllocation": {
         "properties": {
@@ -2354,6 +2986,71 @@
         ],
         "title": "PaymentRequest"
       },
+      "Project": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/Document"
+            },
+            "type": "array",
+            "title": "Documents"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SavedReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "Project"
+      },
+      "ProjectResponse": {
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ReviewResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project",
+          "result"
+        ],
+        "title": "ProjectResponse"
+      },
       "Question": {
         "properties": {
           "id": {
@@ -2470,6 +3167,91 @@
         ],
         "title": "RecipientAction"
       },
+      "RecordChoice": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "agreement",
+              "adjustment",
+              "payment_request",
+              "payment",
+              "refund",
+              "condition",
+              "unknown"
+            ],
+            "title": "Kind"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "answer": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "reject",
+              "unknown"
+            ],
+            "title": "Answer",
+            "default": "unknown"
+          },
+          "recipient": {
+            "type": "string",
+            "enum": [
+              "contractor",
+              "other",
+              "unknown"
+            ],
+            "title": "Recipient",
+            "default": "unknown"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "pending",
+              "scheduled",
+              "failed",
+              "reversed"
+            ],
+            "title": "State",
+            "default": "pending"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind"
+        ],
+        "title": "RecordChoice"
+      },
       "Review": {
         "properties": {
           "extraction_review": {
@@ -2558,6 +3340,68 @@
         "type": "object",
         "title": "Review"
       },
+      "ReviewCommand": {
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Expected Revision"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/RecordChoice"
+            },
+            "type": "array",
+            "maxItems": 150,
+            "title": "Records"
+          },
+          "agreement_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Id"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "cutoff_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Cutoff Date"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/LinkChoice"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Links"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_revision",
+          "records",
+          "cutoff_date"
+        ],
+        "title": "ReviewCommand"
+      },
       "ReviewLink": {
         "properties": {
           "id": {
@@ -2626,6 +3470,105 @@
           "answer"
         ],
         "title": "ReviewLink"
+      },
+      "ReviewResult": {
+        "properties": {
+          "history": {
+            "$ref": "#/components/schemas/HistoryInput"
+          },
+          "normalization": {
+            "$ref": "#/components/schemas/NormalizationResult"
+          },
+          "calculation": {
+            "$ref": "#/components/schemas/LedgerResult"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "incomplete": {
+            "type": "boolean",
+            "title": "Incomplete"
+          },
+          "incomplete_metrics": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "commitment_total_cents",
+                "net_paid_cents",
+                "remaining_commitment_cents",
+                "requested_now_cents",
+                "billed_total_cents",
+                "charge_balances",
+                "positive_outstanding_cents",
+                "credit_balance_cents",
+                "net_allocations_cents",
+                "unallocated_cents",
+                "cash_balances"
+              ]
+            },
+            "type": "array",
+            "title": "Incomplete Metrics"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "conditions": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Conditions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "history",
+          "normalization",
+          "calculation",
+          "questions",
+          "incomplete",
+          "incomplete_metrics",
+          "sources"
+        ],
+        "title": "ReviewResult"
+      },
+      "SavedReview": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "basis_revision": {
+            "type": "integer",
+            "title": "Basis Revision"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "command": {
+            "$ref": "#/components/schemas/ReviewCommand"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "basis_revision",
+          "created_at",
+          "command"
+        ],
+        "title": "SavedReview"
       },
       "ScenarioSummary": {
         "properties": {
@@ -2799,6 +3742,25 @@
         ],
         "title": "SelectVersion"
       },
+      "Session": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token",
+          "project_id"
+        ],
+        "title": "Session"
+      },
       "Source": {
         "properties": {
           "id": {
@@ -2884,6 +3846,62 @@
           "excerpt"
         ],
         "title": "SourceContent"
+      },
+      "Ticket": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "default": 300
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "Ticket"
+      },
+      "TicketRequest": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "upload",
+              "download"
+            ],
+            "title": "Purpose"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9-]{36}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "default": "document"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose"
+        ],
+        "title": "TicketRequest"
       },
       "Trace": {
         "properties": {
@@ -2977,6 +3995,12 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

@@ -33,9 +33,9 @@ jobs:
       - name: Specification integrity
         run: uv run --locked python tools/validate_spec.py
       - name: Python lint
-        run: uv run --locked ruff check services/backend tools/smoke_test.py
+        run: uv run --locked ruff check services/backend tools tests/integration
       - name: Python formatting
-        run: uv run --locked ruff format --check services/backend tools/smoke_test.py
+        run: uv run --locked ruff format --check services/backend tools tests/integration
       - name: Python static types
         run: uv run --locked mypy
       - name: Ledger, API and CLI tests
@@ -70,3 +70,20 @@ jobs:
             sleep 1
           done
           curl --fail --silent http://127.0.0.1:8080/api/demo/scenarios/FIN-11 | python -c 'import json,sys; assert json.load(sys.stdin)["calculation"]["billed_total_cents"] == 1350000'
+      - name: Start private guest integration services
+        if: runner.os == 'Linux'
+        run: |
+          docker compose -f infra/guest.compose.yml up -d --build
+          uv run --locked python tools/setup_guest_local.py
+      - name: Real PostgreSQL, private objects, OCR and restart tests
+        if: runner.os == 'Linux'
+        env:
+          GUEST_API_URL: http://127.0.0.1:8106
+          GUEST_LOCAL_DB: "1"
+        run: uv run --locked pytest tests/integration -q
+      - name: Guest browser journeys on three widths
+        if: runner.os == 'Linux'
+        run: npx playwright test --config playwright.guest.config.ts
+      - name: Stop disposable guest test services
+        if: always() && runner.os == 'Linux'
+        run: docker compose -f infra/guest.compose.yml down --volumes

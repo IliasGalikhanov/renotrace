@@ -189,6 +189,12 @@ def test_actual_openapi_is_exported_and_only_claims_implemented_routes(client):
         "/api/demo/scenarios",
         "/api/demo/scenarios/{scenario_id}",
         "/api/demo/scenarios/{scenario_id}/calculate",
+        "/api/guest/session",
+        "/api/guest/projects/{project_id}",
+        "/api/guest/projects/{project_id}/review",
+        "/api/guest/projects/{project_id}/tickets",
+        "/api/guest/transfer",
+        "/api/guest/maintenance/cleanup",
     }
     assert schema == json.loads((ROOT / "contracts/demo.openapi.json").read_text(encoding="utf-8"))
     assert schema["components"]["schemas"]["RecipientAction"]["additionalProperties"] is False

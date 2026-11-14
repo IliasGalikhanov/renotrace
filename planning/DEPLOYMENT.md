@@ -1,6 +1,58 @@
-# Deploying the synthetic demo
+# Deploying RenoTrace
 
-See STAGE_5_REPORT.md for the observed deployment status and released revisions. The app serves only bundled synthetic data. It is not a private case service, and has no persistence or upload route.
+See [stage 6 report](STAGE_6_REPORT.md) for the current release gate. Stage 5 below is the prior stateless release; stage 6 adds private expiring guest reviews, PostgreSQL, object storage and real OCR. Account registration is not required.
+
+## Stage 6 guest reviews
+
+### Local full stack
+
+Install the locked Python/Node dependencies as below, then start Docker Desktop. The Compose project is named `renotrace-guest-local` and binds test ports only on loopback. Its documented credentials are disposable local test values, never production secrets.
+
+```powershell
+docker compose -f infra/guest.compose.yml up -d --build
+.\scripts\uv.ps1 run --locked python tools/setup_guest_local.py
+npm run build
+$env:BACKEND_URL='http://127.0.0.1:8106'
+node node_modules/next/dist/bin/next start apps/web --hostname 127.0.0.1 --port 3106
+```
+
+Open `http://127.0.0.1:3106/review`. Compose persists PostgreSQL and private SeaweedFS S3 in named Docker volumes. The API has real Tesseract in its image. The source bind mount is **local development only**; the production image contains the checked package and no bind mount. No secret file is baked into either image.
+
+```powershell
+$env:GUEST_API_URL='http://127.0.0.1:8106'
+$env:GUEST_LOCAL_DB='1'
+.\scripts\uv.ps1 run --locked pytest tests/integration -q
+npm run test:guest
+```
+
+Stop the manually started frontend before Playwright, which starts its own frontend. Remote mode: set `RENOTRACE_BASE_URL=https://renotrace.vercel.app`, then `npm run test:guest`; no local servers are started in that mode. The legacy `npm run test:e2e` / `npm run test:remote` retain their original demo behavior.
+
+### Production configuration
+
+Reuse existing Vercel `renotrace` and Render `renotrace-api`. Supabase Free organization **Lias**, project **renotrace**, Singapore (`zbedmuneynqvhzilobsz`); private `guest-originals` bucket, 10,485,760-byte limit, PDF/JPEG/PNG MIME allowlist. Data API is disabled, no Supabase Auth integration, no public bucket/read policy. Free allowances: 500 MB PostgreSQL and 1 GB object storage; the app caps reserved originals at 400 MiB and active reviews at ten. No paid services are authorized or required. See [Supabase pricing](https://supabase.com/pricing).
+
+Render environment (backend only): `DATABASE_URL`, `PGPASSWORD`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `REVIEW_STORAGE_BUCKET=guest-originals`, `FRONTEND_ORIGIN=https://renotrace.vercel.app`, `REVIEW_CLEANUP_SECRET`. Use the free IPv4 **session pooler** and TLS (`sslmode=require` or stronger). No dedicated IPv4 add-on. Service-role key is never exposed to Next.js or browser code. Configure the same cleanup secret in GitHub repository Actions secrets; it authorizes only expiry/outbox processing.
+
+Secrets may be placed locally in ignored `.env.guest.local`; use `uv run --env-file .env.guest.local ...`. Never commit that file or include it in Docker. Apply the additive backend-only schema explicitly:
+
+```powershell
+.\scripts\uv.ps1 run --locked --env-file .env.guest.local python -m app.guest.manage migrate
+.\scripts\uv.ps1 run --locked --env-file .env.guest.local python tools/check_guest_connection.py
+```
+
+The probe uses only a fictional fixture, verifies real storage/text extraction and deletes it. The worker runs in the API process by default (`REVIEW_WORKER=1`). Its job state and page checkpoints are in PostgreSQL, so closing a browser or replacing a container does not lose work. For another deployment topology, `python -m app.guest.manage worker` runs the same leased worker; do not provision a paid worker for this release.
+
+Vercel remains Root Directory `apps/web`, Node 24.x, include files outside root, install `cd ../.. && npm ci`, build `cd ../.. && npm run build`; server `BACKEND_URL=https://renotrace-api.onrender.com`. Originals bypass the [4.5 MB Vercel Function payload limit](https://vercel.com/docs/functions/limitations) via single-use backend transfer tickets. The session secret stays in a Secure HttpOnly cookie. Keep the production domain publicly accessible without Vercel account protection.
+
+### Retention, release and rollback
+
+Project access expires 24 hours after creation. The API worker performs expiry and retryable object deletion while active. `.github/workflows/guest-retention.yml` runs at minute 37 hourly and also supports manual dispatch. It calls a protected cleanup operation with two bounded attempts to allow free-backend startup. This is scheduled retention work, not artificial keep-alive traffic. Verify a successful manual run after release and monitor scheduled failures. GitHub can delay schedules or disable inactive public-repository schedules; a provider pause/outage can delay physical purge, while the API's access cutoff remains enforced. Supabase Free projects may pause after a week without activity; do not assume a paid availability guarantee.
+
+Release only a SHA whose Linux and Windows checks are green. Linux checks include actual PostgreSQL/S3/OCR, restart and guest-browser acceptance, in addition to all previous tests. Keep auto-deploy disabled. Preserve the previous deployed SHA and service configuration before updating. Stage 5 had no guest database/files to back up; the initial stage 6 schema is additive and contains only explicitly created test data before launch. Keep any database snapshots private and expire guest-content backups with the original 24-hour retention window.
+
+Manual deployment/rollback controls remain as described below. Deploy backend first to the checked SHA, verify health/guest session/upload/recalculation/cleanup, then deploy frontend to that **same SHA**. Run both remote demo tests and remote guest tests. A code rollback normally keeps the database intact; do not restore old guest rows or originals and thereby undo a deletion or extend expiry. Rolling back to stage 5 removes the guest UI/API: run cleanup separately until all stage 6 reviews expire and their originals are purged. Do not delete the database/bucket as part of routine rollback.
+
+Original browser downloads cannot be remotely recalled. No persistent files belong on Render disk; only temporary OCR scratch files are used. See [guest contract](GUEST_REVIEW_CONTRACT.md) for precise endpoints, limits and semantics.
 
 Production frontend: [renotrace.vercel.app](https://renotrace.vercel.app)
 

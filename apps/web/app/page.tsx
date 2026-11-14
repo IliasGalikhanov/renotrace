@@ -35,11 +35,19 @@ export default function Home() {
               agreement, changes and payments. Understand the numbers — and what
               still needs an answer.
             </p>
-            <a className="button" href="#workspace">
+            <a className="button" href="/review">
+              Review my invoice <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              className="sample-link"
+              href="#workspace"
+              style={{ marginLeft: 20 }}
+            >
               Try sample <span aria-hidden="true">↗</span>
             </a>
             <span className="hero-note">
-              Fictional records. Real calculations.
+              No account needed. Or explore fictional records with real
+              calculations.
             </span>
           </div>
           <div className="hero-graphic" aria-hidden="true">

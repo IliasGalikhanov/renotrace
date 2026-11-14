@@ -2,6 +2,8 @@ FROM ghcr.io/astral-sh/uv:0.13.8 AS uv
 FROM python:3.13.18-slim
 COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
 ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy PYTHONUNBUFFERED=1 PORT=8000
 COPY pyproject.toml uv.lock ./
 COPY services/backend/app ./services/backend/app

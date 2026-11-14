@@ -41,6 +41,8 @@ htmlcov/
 # Private runtime data and local artifacts
 data/
 uploads/
+!fixtures/uploads/
+!fixtures/uploads/**
 quarantine/
 exports/
 backups/

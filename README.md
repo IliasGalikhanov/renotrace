@@ -4,11 +4,15 @@
 
 RenoTrace traces a renovation invoice back to recorded terms, changes, and payments. The requested amount, calculated remainder, payment conditions, and unresolved questions are separate concepts.
 
-## Current status: stage 5
+## Current status: stage 6
+
+The primary path is **Review my invoice**: upload your own invoice, estimate and payment evidence without an account; check extracted candidates and relationships; calculate using the real Python normalization → ledger. A Secure HttpOnly guest cookie authorizes a private project for 24 hours. PostgreSQL persists review state, audit and durable jobs; original files live in private object storage. Text PDFs are parsed by page; scanned PDFs and PNG/JPEG use real local Tesseract OCR. English labelled USD documents require explicit user review.
+
+**Try sample** remains the separate synthetic demo. See [guest setup and deployment](planning/DEPLOYMENT.md#stage-6-guest-reviews), [the guest contract](planning/GUEST_REVIEW_CONTRACT.md) and [stage 6 results and release status](planning/STAGE_6_REPORT.md).
 
 Implemented: an interactive English synthetic demo, a restricted public FastAPI demo API, a server-side Next.js BFF, a pure Python ledger, and a pure structured-history normalization module. Normalization selects confirmed estimate versions, removes included changes, filters payments/refunds, reconciles bank identities, applies explicit user decisions, and returns unresolved questions and provenance. Stage 3 adds typed billing, comparable cumulative valuations, targeted credit notes, explicit partial payment/refund allocations, invoice balances and unallocated cash. Both domain modules run without a browser, AI, database, or network. The demo calls them on the server for every recalculation; browser code only formats returned amounts.
 
-Not implemented: raw document extraction/OCR, inferred document matching, authentication, persistence, worker queue, exports, or checkout. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The demo runs without registration and never saves visitor decisions. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
+Not implemented: account registration, general-purpose LLM document understanding, automatic inferred document matching, exports or checkout. Bank deduplication requires a stable operation ID and account context; matching amounts alone do not merge events. The synthetic demo never saves visitor decisions. The original specification uses **RenoLedger**; its source files and schema identifiers are preserved as the baseline for RenoTrace.
 
 ## Try the interactive demo
 

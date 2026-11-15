@@ -64,9 +64,9 @@ test("recheck corrected invoice preserves payment and frozen comparison history 
       .getByRole("checkbox", { name: /I understand the processing/ })
       .check();
     for (const name of [
+      "recheck-original.pdf",
       "recheck-estimate.pdf",
       "recheck-payment.pdf",
-      "recheck-original.pdf",
     ]) {
       await page
         .getByLabel("Add a document", { exact: true })
@@ -122,6 +122,12 @@ test("recheck corrected invoice preserves payment and frozen comparison history 
       info.outputPath("initial.pdf"),
     );
     expect(initialPdf).toContain("$6,200.00");
+    expect(initialPdf).toContain("ACTIVE in this selected calculation");
+    // Fast extraction may finish before a polling read records a processing card.
+    // The deterministic processing transition is covered by the domain regression.
+    expect(initialPdf).toContain(
+      "Historical messages are not current document status",
+    );
     expect(initialPdf).not.toContain("earlier $1,200 transfer");
     await page
       .getByRole("button", { name: "Close historical snapshot" })
@@ -219,7 +225,26 @@ test("recheck corrected invoice preserves payment and frozen comparison history 
     await expect(page.getByTestId("guest-requested")).toHaveText("$5,000.00");
     await expect(page.getByTestId("guest-remaining")).toHaveText("$5,000.00");
     await page.reload();
+    await page.route(
+      "**/api/guest/projects/*/comparisons/*",
+      (route) =>
+        route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({
+            detail: "Saved comparison temporarily unavailable",
+          }),
+        }),
+      { times: 1 },
+    );
     await page.getByRole("button", { name: /View comparison ·/ }).click();
+    await expect(
+      page.getByRole("button", { name: "Retry saved evidence" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Saved invoice comparison" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Retry saved evidence" }).click();
     const comparison = page.getByRole("region", {
       name: "Saved invoice comparison",
     });
@@ -247,6 +272,19 @@ test("recheck corrected invoice preserves payment and frozen comparison history 
     expect(comparedPdf).toContain("-$1,200.00");
     expect(comparedPdf).toContain("No additional payment is created.");
     expect(comparedPdf).toContain("earlier $1,200 transfer");
+    expect(comparedPdf).toContain(
+      "HISTORICAL - absent from this selected calculation",
+    );
+    expect(comparedPdf).toContain("Previous conclusion requires reassessment");
+    expect(comparedPdf).not.toContain("New question:");
+    await expect(
+      comparison.locator('[data-question-presence="historical"]').first(),
+    ).toBeVisible();
+    await expect(
+      comparison.getByRole("heading", {
+        name: "Questions first recorded since the previous snapshot",
+      }),
+    ).toBeVisible();
     // Re-export the old selection after the new reply, documents and calculation.
     await page
       .getByRole("button", { name: /View calculation · revision/ })
@@ -269,15 +307,22 @@ test("recheck corrected invoice preserves payment and frozen comparison history 
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    await fs.mkdir("planning/screenshots/stage9", { recursive: true });
+    await fs.mkdir("planning/screenshots/stage10", { recursive: true });
     await page.screenshot({
-      path: `planning/screenshots/stage9/pdf-download-${info.project.name}.png`,
+      path: `planning/screenshots/stage10/pdf-download-${info.project.name}.png`,
+    });
+    await comparison
+      .locator('[data-question-presence="historical"]')
+      .first()
+      .scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: `planning/screenshots/stage10/question-history-${info.project.name}.png`,
     });
     if (process.env.RENOTRACE_BASE_URL && info.project.name === "guest-1440") {
       await fs.mkdir("output/pdf", { recursive: true });
       await fs.copyFile(
         info.outputPath("comparison.pdf"),
-        "output/pdf/renotrace-fictional-public-recheck.pdf",
+        "output/pdf/renotrace-stage10-public-recheck.pdf",
       );
     }
   } finally {

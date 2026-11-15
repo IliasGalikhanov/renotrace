@@ -47,6 +47,15 @@ export default function InvoiceEditor({
         they never create contract obligations or bank transfers. Use positive
         amounts for discounts, credits and reflected payments.
       </p>
+      {document.invoice_proposals.length === 0 && (
+        <p role="note">
+          No invoice positions were recognised. Open the original, choose Review
+          invoice composition, then Add missed position for each row. Enter its
+          meaning, description, USD amount and source page; mark it checked only
+          after comparing with the original. The total alone does not establish
+          the composition.
+        </p>
+      )}
       {!invoice ? (
         <button
           onClick={() =>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import PdfDownload from "./pdf-download";
+import QuestionPresence from "./question-presence";
 import type { Command, Result, State } from "./review";
 import {
   type CheckedLine,
@@ -124,6 +125,10 @@ export default function Rechecks({
   const [pack, setPack] = useState<Package | null>(null);
   const [base, setBase] = useState<Base | null>(null);
   const [comparison, setComparison] = useState<Comparison | null>(null);
+  const [comparisonTarget, setComparisonTarget] = useState<string | null>(null);
+  const [comparisonCards, setComparisonCards] = useState<
+    State["casework"]["cards"]
+  >([]);
   const [financialEvidence, setFinancialEvidence] = useState<Base | null>(null);
   const [error, setError] = useState("");
   const [retryEpoch, setRetryEpoch] = useState(0);
@@ -170,10 +175,18 @@ export default function Rechecks({
     setLoading(true);
     setError("");
     setComparison(null);
+    setComparisonTarget(id);
+    setComparisonCards([]);
     setFinancialEvidence(null);
     try {
       const saved = await read<Comparison>(`${url}/comparisons/${id}`);
-      if (gen === generation.current) setComparison(saved);
+      const snapshot = await read<Base>(
+        `${url}/snapshots/${saved.new_snapshot_id}`,
+      );
+      if (gen === generation.current) {
+        setComparisonCards(snapshot.payload.discussion.cards);
+        setComparison(saved);
+      }
     } catch (e) {
       if (gen === generation.current) setError((e as Error).message);
     } finally {
@@ -279,8 +292,8 @@ export default function Rechecks({
           {error}
           <button
             onClick={() =>
-              comparison
-                ? void open(comparison.id)
+              comparisonTarget
+                ? void open(comparisonTarget)
                 : setRetryEpoch((value) => value + 1)
             }
           >
@@ -562,6 +575,12 @@ export default function Rechecks({
           >
             Save recheck package
           </button>
+          <p>
+            Step 1 saves your document links and reply versions as a draft. It
+            does not calculate or produce a completed comparison. Step 2 below
+            runs the checked calculation and saves a comparison you can
+            download.
+          </p>
           {packageDirty && (
             <p role="status">
               Package has unsaved changes. Save it before running the recheck.
@@ -821,8 +840,20 @@ export default function Rechecks({
             </p>
           ))}
           <h4>Original questions</h4>
+          <p>
+            These are questions from the previous saved calculation, not current
+            document-status messages. Reassessment and owner decisions remain
+            separate from their presence in a calculation.
+          </p>
           {result.question_findings.map((q) => (
             <article key={q.question_id}>
+              {comparisonCards.find((c) => c.id === q.question_id) ? (
+                <QuestionPresence
+                  card={comparisonCards.find((c) => c.id === q.question_id)!}
+                />
+              ) : (
+                <p>Presence not recorded in the selected snapshot.</p>
+              )}
               <strong>{q.original_question}</strong>
               <p>{q.finding}</p>
               {q.linked_changes?.map((change, index) => (
@@ -853,9 +884,16 @@ export default function Rechecks({
               ))}
             </article>
           ))}
-          <h4>New questions</h4>
+          <h4>Questions first recorded since the previous snapshot</h4>
+          <p>
+            First recorded does not mean currently active. These labels come
+            from the saved comparison, not today's case.
+          </p>
           {result.new_questions.map((q) => (
-            <p key={q.id}>{q.observation.message}</p>
+            <article key={q.id}>
+              <QuestionPresence card={q} />
+              <p>Recorded question: {q.observation.message}</p>
+            </article>
           ))}
           <h4>Payment conditions</h4>
           <p>

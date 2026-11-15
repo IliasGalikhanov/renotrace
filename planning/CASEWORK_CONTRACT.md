@@ -4,6 +4,8 @@ Stage 7 introduced contract `guest-review/2`, API version `0.7.0`. Stage 8 adds 
 
 ## Actual owner-scoped routes
 
+Stage 10 presentation uses each selected saved card's `observation.active` without reconciling old snapshots: true means active in that calculation, false means historical and absent, and a missing flag means unrecorded. `evidence_state=needs_recheck` independently marks a previous conclusion requiring reassessment. Absence never proves resolution or closes a financial question. Historical processing/eligibility messages are not current document statuses. No storage or financial algorithm change is required.
+
 All routes below start `/api/guest/projects/{project_id}`. Bearer ownership and unexpired project are checked before reading entities, replaying an operation or mutating data. The BFF retains the secret in its HttpOnly cookie and only forwards its explicit route allowlist. Same-origin checks also apply to these JSON mutations.
 
 | Method / suffix | Contract |

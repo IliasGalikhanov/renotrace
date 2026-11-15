@@ -213,6 +213,8 @@ For a true sleep check, close demo tabs and stop tests for more than 15 minutes;
 
 ## Release and rollback
 
+Stage 10 changes presentation to API `0.10.0` / PDF `reconciliation-pdf/2`. No migration, environment variables, new services or paid resources are required. Publish the checked implementation SHA recorded in [stage 10 report](STAGE_10_REPORT.md), backend first and frontend after its HTTPS export check. Then run the public recheck/download journey on all three widths and the ordinary-invoice manual-entry journey on 1440 px, followed by `npm run test:remote`. Before this release both hosts used `bd8e80ceb704f563fa7290c1c836a8ab2b0ee296`; redeploy that SHA to both hosts if rollback is needed. Existing snapshots retain their data; PDF exports use the deployed renderer version. Already downloaded PDF/1 copies do not change.
+
 1. Commit/push; require both `RenoTrace checks / verify` matrix jobs to succeed for that exact SHA, including Linux container smoke. Record the previously live frontend/backend revisions and deployment IDs.
 2. Render: **Manual Deploy → Deploy a specific commit**, enter the checked SHA. Wait for Live; verify health, scenario list, FIN-11 and FIN-16 POST. Keep auto-deploy off.
 3. Vercel: **Deployments → Create Deployment**, paste the full checked SHA in **Branch, Commit, or URL**, verify the resolved commit and **Production**, then choose **Deploy to Production** with `BACKEND_URL` set. Git-triggered deployments are disabled in `apps/web/vercel.json` (`git.deploymentEnabled: false`). Push runs CI but does not release. Manual deployment is an operator-controlled CI gate, not an automated integration.

@@ -1,6 +1,8 @@
 # Stage 9 - PDF reconciliation from frozen evidence
 
-API `0.9.0`; PDF layout/content contract `reconciliation-pdf/1`. Calculation contract remains `guest-review/3`; comparison algorithm remains `invoice-comparison/1`. This extends [saved calculations](CASEWORK_CONTRACT.md) and [rechecks](RECHECK_CONTRACT.md), without changing financial semantics, retention or guest ownership.
+API `0.10.0`; PDF presentation contract `reconciliation-pdf/2`. Calculation contract remains `guest-review/3`; comparison algorithm remains `invoice-comparison/1`. This extends [saved calculations](CASEWORK_CONTRACT.md) and [rechecks](RECHECK_CONTRACT.md), without changing financial semantics, retention or guest ownership.
+
+Stage 10 presents saved `observation.active` explicitly: true means active in the selected calculation; false means retained history absent from that calculation; a missing legacy flag is labelled unrecorded, never guessed. `needs_recheck` is a separate evidence assessment: a previous conclusion requires reassessment, whether active or historical. Neither absence nor owner acceptance closes a financial question. Historical processing/eligibility messages are explicitly not current document status. The legacy comparison key `new_questions` means cards first recorded since the prior snapshot, not necessarily new active problems. Its saved flags remain authoritative; the comparison UI reads the selected immutable snapshot for original-card presence. No snapshot, comparison or financial result is recalculated or rewritten by this presentation change. Existing downloaded version-1 PDFs remain unchanged.
 
 ## Selection and historical consistency
 

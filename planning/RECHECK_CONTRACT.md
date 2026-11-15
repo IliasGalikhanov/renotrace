@@ -4,6 +4,8 @@ API `0.8.0`, calculation snapshot contract `guest-review/3`, comparison algorith
 
 ## Workflow and actual API
 
+Stage 10 clarifies the legacy saved key `new_questions`: it contains cards first recorded since the previous snapshot, including inactive historical cards. It is not a list of new active problems. UI/PDF label these cards using their saved `observation.active`; original-question findings use the selected comparison's `new_snapshot_id` discussion. The UI reads that immutable snapshot, never today's discussion or a rerun of the calculation. Reassessment remains separate from presence. Stored comparisons and `invoice-comparison/1` are unchanged.
+
 The owner chooses an existing snapshot, starts a persisted recheck draft, uploads documents through the existing transfer pipeline, selects replies/versions and source files, reviews financial facts and invoice positions, saves the package, and explicitly runs the recheck. Upload or package save alone never produces a completed comparison. Existing **Save review and calculate** remains available; financial form changes are committed only by that action or **Run recheck**. Unsaved form edits are not an autosaved draft. The package is independently saved and survives reload/restart.
 
 Routes below start `/api/guest/projects/{project_id}` and use the existing bearer ownership/expiry check and same-origin BFF allowlist. Full typed schemas are exported to `contracts/demo.openapi.json` from the real FastAPI app.

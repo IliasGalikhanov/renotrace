@@ -480,7 +480,9 @@ export default function GuestReview() {
       </section>
       {busy && (
         <p role="status" className="guest-status">
-          {busy} The service may take a moment to start.
+          {busy} The free service can take a few minutes. Keep this tab open; do
+          not upload the same file again. If an error appears, use Retry /
+          reload review to check what was saved before repeating an action.
         </p>
       )}
       {error && (
@@ -504,7 +506,9 @@ export default function GuestReview() {
             <h2>1. Your documents</h2>
             <p>
               Start with the current invoice, then add the estimate and payment
-              confirmations.
+              confirmations. Wait for each file to finish processing. You will
+              check the amounts, recipient and invoice rows before saving a
+              calculation.
             </p>
             <label className="guest-consent">
               <input
@@ -536,7 +540,22 @@ export default function GuestReview() {
                     {d.page_count} page(s) · {d.status} · {d.pages.length}{" "}
                     processed
                   </span>
-                  {d.error && <p role="alert">{d.error}</p>}
+                  {d.error && (
+                    <p role="alert">
+                      {d.error} Open the original to check readability; try a
+                      clearer PDF or image if needed. No missing values have
+                      been invented.
+                    </p>
+                  )}
+                  {d.status === "ready" && d.candidates.length === 0 && (
+                    <p>
+                      No financial amounts were recognised. Open the original
+                      and try a clearly labelled English USD document. This MVP
+                      cannot manually create a missing invoice total or contract
+                      total; it can correct recognised candidates and add
+                      invoice positions once a request is recognised.
+                    </p>
+                  )}
                 </div>
                 <button disabled={!!busy} onClick={() => void openSource(d.id)}>
                   View {d.name}
@@ -593,7 +612,10 @@ export default function GuestReview() {
                 Nothing is automatically confirmed. Compare each candidate with
                 its source, correct mistakes, then choose Include, Exclude or
                 Unknown. A deposit mentioned on an invoice is not proof of
-                another transfer.
+                another transfer. Invoice line amounts are not separate payment
+                requests: exclude such candidates and enter the rows under
+                Invoice composition. Include only the invoice's total as the
+                current request.
               </p>
               {command.records.map((r, index) => {
                 const c = candidates.find((c) => c.id === r.id)!;

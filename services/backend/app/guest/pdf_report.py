@@ -31,7 +31,7 @@ from .casework_models import Snapshot
 from .models import Problem
 from .recheck_models import Comparison
 
-EXPORT_VERSION = "reconciliation-pdf/1"
+EXPORT_VERSION = "reconciliation-pdf/2"
 MAX_PDF_BYTES = 16 * 1024 * 1024
 MAX_PAGES = 300
 
@@ -62,6 +62,16 @@ def money(value: Any) -> str:
         raise Problem(422, "Saved monetary value is not integer cents")
     sign = "-" if value < 0 else ""
     return f"{sign}${abs(value) // 100:,}.{abs(value) % 100:02d}"
+
+
+def question_presence(card: dict[str, Any]) -> str:
+    """Present saved observations, without re-evaluating or resolving their evidence."""
+    active = card.get("observation", {}).get("active")
+    if active is True:
+        return "ACTIVE in this selected calculation"
+    if active is False:
+        return "HISTORICAL - absent from this selected calculation"
+    return "Question presence was not recorded in this saved version"
 
 
 def text(value: Any) -> str:
@@ -300,9 +310,13 @@ class Report:
         if len(questions) > 4:
             self.add(f"{len(questions) - 4} additional calculation questions appear below.")
         if unresolved:
+            active = sum(c.get("observation", {}).get("active") is True for c in unresolved)
+            historical = sum(c.get("observation", {}).get("active") is False for c in unresolved)
             self.add(
-                f"{len(unresolved)} discussion question(s) still lack verified evidence. "
-                "Accepting an explanation or stopping clarification does not resolve them."
+                f"Unverified discussion: {active} active, {historical} historical, "
+                f"{len(unresolved) - active - historical} with unrecorded presence. "
+                "Historical messages are not current document status. Absence, owner acceptance "
+                "or stopping clarification does not verify resolution."
             )
 
     def metric_table(self, snapshot: Snapshot) -> None:
@@ -477,7 +491,18 @@ class Report:
             )
         for index, card in enumerate(cards, 1):
             observation = card["observation"]
-            self.add(f"Q{index} - " + observation["message"], "sub")
+            self.add(f"Q{index} - " + question_presence(card), "sub")
+            self.add("Recorded question: " + observation["message"])
+            if card.get("evidence_state") == "needs_recheck":
+                self.add(
+                    "Previous conclusion requires reassessment; it is not verified resolution."
+                )
+            if observation.get("active") is False:
+                self.add(
+                    "This message is retained history, not a current processing or eligibility "
+                    "status. Its absence does not close the financial question.",
+                    "small",
+                )
             self.add(
                 "Evidence: "
                 + card["evidence_state"].replace("_", " ")
@@ -605,7 +630,18 @@ class Report:
             self.add(issue)
         self.add("Findings against original questions", "sub")
         for finding in result.get("question_findings", []):
-            self.add(finding["original_question"], "sub")
+            saved_card: dict[str, Any] = next(
+                (
+                    c
+                    for c in self.basis.selected.payload.get("discussion", {}).get("cards", [])
+                    if c["id"] == finding["question_id"]
+                ),
+                {},
+            )
+            self.add(question_presence(saved_card), "sub")
+            self.add("Original recorded question: " + finding["original_question"])
+            if finding.get("requires_recheck"):
+                self.add("Previous conclusion requires reassessment.")
             self.add(finding["finding"])
             self.add(finding["still_unknown"])
             self.add(
@@ -626,8 +662,15 @@ class Report:
                 self.add(
                     "Original extract: " + (row.get("original_text") or "Manual entry"), "small"
                 )
+        if result.get("new_questions"):
+            self.add("Questions first recorded since the previous snapshot", "sub")
+            self.add(
+                "First recorded does not mean currently active. Presence below is saved evidence."
+            )
         for card in result.get("new_questions", []):
-            self.add("New question: " + card["observation"]["message"])
+            self.add(question_presence(card) + ": " + card["observation"]["message"])
+            if card.get("evidence_state") == "needs_recheck":
+                self.add("Previous conclusion requires reassessment.", "small")
         self.add("Payment conditions - before / after", "sub")
         for label, key, snap in (
             ("Before", "conditions_before", self.basis.previous),

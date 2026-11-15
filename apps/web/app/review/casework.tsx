@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import PdfDownload from "./pdf-download";
+import QuestionPresence, { presenceLabel } from "./question-presence";
 import type { Result, State } from "./review";
 
 type Evidence =
@@ -213,14 +214,12 @@ export default function Casework({
           data-question-code={card.observation.code}
         >
           <summary>
+            <strong>{presenceLabel(card)}</strong>
+            {" · "}
             {card.observation.message}{" "}
             <span>{evidenceLabels[card.evidence_state]}</span>
           </summary>
-          <p>
-            {card.observation.active
-              ? "Present in the current calculation."
-              : "Not present in the current calculation. Disappearance alone is not verified resolution."}
-          </p>
+          <QuestionPresence card={card} />
           <p>
             <strong>Evidence:</strong> {evidenceLabels[card.evidence_state]}
             <br />
@@ -589,6 +588,23 @@ export default function Casework({
               )}
             </article>
           </div>
+          <h4>Discussion recorded with this selected snapshot</h4>
+          <p>
+            Active questions, retained history and reassessment are separate. No
+            later case changes are shown here.
+          </p>
+          {snapshot.payload.discussion?.cards.map((card) => (
+            <details key={card.id}>
+              <summary>
+                {presenceLabel(card)} · {card.observation.message}
+              </summary>
+              <QuestionPresence card={card} />
+              <p>
+                Evidence: {evidenceLabels[card.evidence_state]}. Owner decision:{" "}
+                {decisionLabels[card.owner_decision]}.
+              </p>
+            </details>
+          ))}
           <p>
             Recorded commitments{" "}
             {money(snapshot.payload.result.calculation.commitment_total_cents)};

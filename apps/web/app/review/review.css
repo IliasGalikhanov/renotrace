@@ -432,3 +432,14 @@
 .pdf-version {
   font-size: 0.85rem;
 }
+.question-presence {
+  border-left: 3px solid #688675;
+  padding: 0.5rem 0.8rem;
+  margin: 0.6rem 0;
+}
+.question-presence[data-question-presence="historical"] {
+  background: #f1f0ea;
+}
+.question-card > summary > strong {
+  display: block;
+}

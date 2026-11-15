@@ -4,7 +4,9 @@
 
 RenoTrace traces a renovation invoice back to recorded terms, changes, and payments. The requested amount, calculated remainder, payment conditions, and unresolved questions are separate concepts.
 
-## Current status: stage 9
+## Current status: stage 10 readiness verification
+
+Saved questions now distinguish **active in the selected calculation**, **historical and absent from it**, and the independent **previous conclusion requires reassessment** state. UI and PDF use saved observation flags; disappearance never closes a financial question. See the [showcase guide](planning/SHOWCASE_GUIDE.md) and [stage 10 verification and release status](planning/STAGE_10_REPORT.md). The ordinary fictional invoice demonstrates manual correction and missed positions, not general-purpose recognition.
 
 The primary path is **Review my invoice**: upload your own invoice, estimate and payment evidence without an account; check extracted candidates and relationships; calculate using the real Python normalization → ledger. A Secure HttpOnly guest cookie authorizes a private project for 24 hours. PostgreSQL persists review state, audit and durable jobs; original files live in private object storage. Text PDFs are parsed by page; scanned PDFs and PNG/JPEG use real local Tesseract OCR. English labelled USD documents require explicit user review.
 

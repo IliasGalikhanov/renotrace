@@ -54,6 +54,7 @@ def test_export_original_and_pinned_recheck_after_later_changes_and_private_tick
         == 404
     )
     original_pdf = pdf(client, transfer)
+    assert "Historical messages are not current document status" in original_pdf
     assert "$6,200.00" in original_pdf and "$1,200.00" in original_pdf
     assert (
         client.get("/api/guest/export", headers={"Authorization": "Bearer " + transfer}).status_code
@@ -113,6 +114,8 @@ def test_export_original_and_pinned_recheck_after_later_changes_and_private_tick
     assert "PINNED-EXPLANATION" in result_pdf and "UNPINNED-ANSWER" not in result_pdf
     assert "No additional payment is created" in result_pdf
     assert "source unavailable" not in result_pdf
+    assert "New question:" not in result_pdf
+    assert "Previous conclusion requires reassessment" in result_pdf
     assert "$5,000.00" in result_pdf and "-$1,200.00" in result_pdf
     post(
         client,

@@ -213,6 +213,8 @@ For a true sleep check, close demo tabs and stop tests for more than 15 minutes;
 
 ## Release and rollback
 
+Current verified application release (2026-11-15): **`61275bb8dae6827f7ebd1c208abd42d79c6c9bbd`** on both Vercel and Render. The owner confirmed platform Ready/Live; independent public browser and HTTP checks passed, including actual PDF downloads. See [stage 10 evidence](STAGE_10_REPORT.md). Later documentation/artifact commits do not change this live revision. No schema/environment change or paid resource was added.
+
 Stage 10 changes presentation to API `0.10.0` / PDF `reconciliation-pdf/2`. No migration, environment variables, new services or paid resources are required. Publish the checked implementation SHA recorded in [stage 10 report](STAGE_10_REPORT.md), backend first and frontend after its HTTPS export check. Then run the public recheck/download journey on all three widths and the ordinary-invoice manual-entry journey on 1440 px, followed by `npm run test:remote`. Before this release both hosts used `bd8e80ceb704f563fa7290c1c836a8ab2b0ee296`; redeploy that SHA to both hosts if rollback is needed. Existing snapshots retain their data; PDF exports use the deployed renderer version. Already downloaded PDF/1 copies do not change.
 
 1. Commit/push; require both `RenoTrace checks / verify` matrix jobs to succeed for that exact SHA, including Linux container smoke. Record the previously live frontend/backend revisions and deployment IDs.
